@@ -186,7 +186,7 @@ export default function App() {
                 marginTop: 4,
                 opacity: 0.8,
               }}>
-                Experience & Values Alignment
+                Values and Alignment Form
               </span>
             </div>
           </div>
@@ -238,6 +238,7 @@ export default function App() {
                       transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
                       style={{
                         margin: '0 auto',
+                        marginBottom: 20,
                         width: 64, height: 64,
                         borderRadius: 16,
                         background: 'rgba(202,138,4,0.08)',
@@ -264,7 +265,7 @@ export default function App() {
                         letterSpacing: '-0.01em',
                       }}>
                         Welcome to Your<br />
-                        <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>Breakthrough Journey</em>
+                        <span style={{ color: 'var(--gold-light)', fontStyle: 'normal', letterSpacing: '0.03em' }}>BREAKTHROUGH Experience</span>
                       </h1>
 
                       {/* Gold ornament */}
@@ -312,6 +313,7 @@ export default function App() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.5, duration: 0.5 }}
+                      style={{ paddingTop: 16 }}
                     >
                       <button
                         id="begin-questionnaire-btn"
@@ -319,7 +321,7 @@ export default function App() {
                         className="btn-gold"
                         style={{ margin: '0 auto' }}
                       >
-                        Begin Reflection
+                        Enter the Dojo
                         <ArrowRight style={{ width: 15, height: 15 }} />
                       </button>
                     </motion.div>
