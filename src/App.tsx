@@ -4,11 +4,13 @@ import { Layers, Calendar, CheckCircle2, ArrowRight, RefreshCw, CalendarCheck, A
 import { IntakeFormState, BookingState, Submission } from './types';
 import { INITIAL_FORM_STATE } from './constants';
 import WizardForm from './components/WizardForm';
+import LongForm from './components/LongForm';
 import Scheduler from './components/Scheduler';
 import PractitionerPortal from './components/PractitionerPortal';
 
 export default function App() {
   const [formState, setFormState] = useState<IntakeFormState>(INITIAL_FORM_STATE);
+  const [layoutMode, setLayoutMode] = useState<'wizard' | 'single'>('wizard');
   const [viewPhase, setViewPhase] = useState<'intake' | 'loading' | 'booking' | 'completed'>('intake');
   const [currentBooking, setCurrentBooking] = useState<BookingState | null>(null);
   const [bookingSynced, setBookingSynced] = useState<boolean>(false);
@@ -345,6 +347,55 @@ export default function App() {
                 </div>
               ) : (
                 <>
+                  {/* Layout Toggle */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div className="glass-card" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: 4,
+                      borderRadius: 9999,
+                    }}>
+                      <span style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 9,
+                        fontWeight: 600,
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        padding: '0 12px',
+                      }}>
+                        Layout
+                      </span>
+                      {(['wizard', 'single'] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          id={`${mode}-layout-toggle-btn`}
+                          onClick={() => setLayoutMode(mode)}
+                          style={{
+                            padding: '7px 18px',
+                            borderRadius: 9999,
+                            fontFamily: 'var(--font-heading)',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: '0.14em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            border: 'none',
+                            transition: 'all 250ms ease',
+                            background: layoutMode === mode
+                              ? 'linear-gradient(135deg, #CA8A04, #EAB308)'
+                              : 'transparent',
+                            color: layoutMode === mode ? '#0c0a08' : 'var(--text-muted)',
+                            boxShadow: layoutMode === mode ? '0 2px 12px rgba(202,138,4,0.3)' : 'none',
+                          }}
+                        >
+                          {mode === 'wizard' ? 'Walkthrough' : 'Single Page'}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
                   {/* Form Card */}
                   <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
                     <div style={{
@@ -352,11 +403,19 @@ export default function App() {
                       background: 'linear-gradient(90deg, transparent, rgba(202,138,4,0.6), rgba(234,179,8,0.8), rgba(202,138,4,0.6), transparent)'
                     }} />
                     <div className="p-6 md:p-10">
-                      <WizardForm
-                        data={formState}
-                        onChange={handleFormChange}
-                        onSubmit={handleFormSubmit}
-                      />
+                      {layoutMode === 'wizard' ? (
+                        <WizardForm
+                          data={formState}
+                          onChange={handleFormChange}
+                          onSubmit={handleFormSubmit}
+                        />
+                      ) : (
+                        <LongForm
+                          data={formState}
+                          onChange={handleFormChange}
+                          onSubmit={handleFormSubmit}
+                        />
+                      )}
                     </div>
                   </div>
                 </>
