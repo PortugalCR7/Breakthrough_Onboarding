@@ -308,9 +308,8 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
 
       {/* Google Calendar Integration Panel */}
       <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 28 }}>
-        <div style={{
-          background: 'rgba(8,7,6,0.65)',
-          border: '1px solid rgba(202,138,4,0.12)',
+        <div className="glass-subtle" style={{
+          borderColor: 'rgba(202,138,4,0.15)',
           borderRadius: 16,
           padding: '20px 24px',
           display: 'flex',
@@ -339,10 +338,9 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
 
             {/* Auth control */}
             {user ? (
-              <div style={{
+              <div className="glass-card" style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                background: 'rgba(20,17,13,0.9)',
-                border: '1px solid rgba(202,138,4,0.2)',
+                borderColor: 'rgba(202,138,4,0.2)',
                 borderRadius: 12, padding: '10px 14px',
               }}>
                 {user.photoURL && (
@@ -383,11 +381,10 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
                 type="button"
                 disabled={isLoading}
                 onClick={handleGoogleSignIn}
+                className="glass-card"
                 style={{
                   display: 'inline-flex', alignItems: 'center', gap: 8,
                   padding: '10px 18px',
-                  background: 'rgba(20,17,13,0.9)',
-                  border: '1px solid rgba(255,255,255,0.1)',
                   borderRadius: 9999,
                   fontFamily: 'var(--font-heading)', fontSize: 11,
                   fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase',
@@ -397,11 +394,11 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
                   opacity: isLoading ? 0.5 : 1,
                 }}
                 onMouseEnter={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(202,138,4,0.25)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-strong)';
                   (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)';
                 }}
                 onMouseLeave={e => {
-                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'var(--border-subtle)';
                   (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
                 }}
               >

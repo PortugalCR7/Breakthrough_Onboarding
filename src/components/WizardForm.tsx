@@ -156,10 +156,8 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
     <div id="wizard-form-container" className="w-full">
 
       {/* ── Progress Header ── */}
-      <div style={{
+      <div className="glass-subtle" style={{
         marginBottom: 36,
-        background: 'rgba(8,7,6,0.6)',
-        border: '1px solid var(--border-subtle)',
         borderRadius: 16,
         padding: '18px 22px',
       }}>

@@ -119,26 +119,31 @@ export default function App() {
 
       {/* Ambient background layers */}
       <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        {/* Diagonal light beam, echoing a directional key light across the canvas */}
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse 80% 60% at 70% -10%, rgba(202,138,4,0.04) 0%, transparent 60%)'
+          background: 'linear-gradient(112deg, transparent 15%, rgba(255,255,255,0.05) 35%, rgba(255,255,255,0.02) 45%, transparent 60%)'
         }} />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse 60% 50% at 10% 110%, rgba(202,138,4,0.025) 0%, transparent 55%)'
+          background: 'radial-gradient(ellipse 70% 55% at 75% -8%, rgba(202,138,4,0.10) 0%, transparent 58%)'
         }} />
         <div style={{
           position: 'absolute', inset: 0,
-          background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,255,255,0.008) 0%, transparent 70%)'
+          background: 'radial-gradient(ellipse 60% 50% at 6% 108%, rgba(255,255,255,0.035) 0%, transparent 55%)'
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 55% 45% at 50% 45%, rgba(255,255,255,0.015) 0%, transparent 70%)'
         }} />
       </div>
 
       {/* Header */}
       <header style={{
         borderBottom: '1px solid var(--border-subtle)',
-        backgroundColor: 'rgba(8,7,6,0.92)',
-        backdropFilter: 'blur(24px)',
-        WebkitBackdropFilter: 'blur(24px)',
+        backgroundColor: 'rgba(10,10,11,0.55)',
+        backdropFilter: 'blur(28px) saturate(150%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(150%)',
         position: 'sticky',
         top: 0,
         zIndex: 40,
@@ -526,7 +531,9 @@ export default function App() {
 
                   {/* Terminal log */}
                   <div style={{
-                    background: 'rgba(8,7,6,0.9)',
+                    background: 'rgba(6,6,7,0.85)',
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
                     border: '1px solid rgba(202,138,4,0.12)',
                     borderRadius: 12,
                     padding: '16px 20px',
@@ -651,9 +658,8 @@ export default function App() {
 
                   {/* Booking details card */}
                   {currentBooking && (
-                    <div style={{
-                      background: 'rgba(8,7,6,0.7)',
-                      border: '1px solid var(--border-gold)',
+                    <div className="glass-subtle" style={{
+                      borderColor: 'var(--border-gold)',
                       borderLeft: '3px solid var(--gold)',
                       borderRadius: 16,
                       padding: '20px 24px',
