@@ -1,0 +1,26 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Jost:ital,wght@0,100..900;1,100..900&family=Libre+Bodoni:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: "Jost", sans-serif;
+  --font-display: "Libre Bodoni", serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, monospace;
+}
+
+/* Custom glow effects and scrollbars */
+.glow-stone {
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.03);
+}
+
+.border-metallic {
+  border: 1px solid rgba(255, 255, 255, 0.12);
+}
+
+.glass-premium {
+  background: rgba(10, 10, 10, 0.75);
+  backdrop-filter: blur(24px) saturate(130%);
+  -webkit-backdrop-filter: blur(24px) saturate(130%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.7);
+}

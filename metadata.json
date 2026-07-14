@@ -1,0 +1,6 @@
+{
+  "name": "Breakthrough Experience Onboarding",
+  "description": "A high-contrast, elegant client intake and scheduling portal for The Breakthrough Experience, featuring values alignment, 7 areas of life transformation mapping, and Google Calendar integration.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
