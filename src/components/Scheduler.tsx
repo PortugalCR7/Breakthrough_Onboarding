@@ -14,66 +14,48 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [selectedSlot, setSelectedSlot] = useState<string>('');
   const [days, setDays] = useState<{ dateString: string; label: string; dayName: string; isPast: boolean; isWeekend: boolean }[]>([]);
-  
+
   const [user, setUser] = useState<User | null>(null);
   const [token, setToken] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [successEvent, setSuccessEvent] = useState<any>(null);
 
-  // Load next 14 available dates (excluding weekends)
+  // Load next 12 available weekday dates
   useEffect(() => {
     const list = [];
     let current = new Date();
-    // Add 1 day so bookings start from tomorrow
     current.setDate(current.getDate() + 1);
 
     while (list.length < 12) {
       const dayOfWeek = current.getDay();
-      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6; // 0 = Sunday, 6 = Saturday
-      
+      const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
       const year = current.getFullYear();
       const month = String(current.getMonth() + 1).padStart(2, '0');
       const date = String(current.getDate()).padStart(2, '0');
       const dateString = `${year}-${month}-${date}`;
 
-      const options: Intl.DateTimeFormatOptions = { weekday: 'short' };
-      const dayName = current.toLocaleDateString('en-US', options);
-
-      const labelOptions: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
-      const label = current.toLocaleDateString('en-US', labelOptions);
+      const dayName = current.toLocaleDateString('en-US', { weekday: 'short' });
+      const label = current.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
       if (!isWeekend) {
-        list.push({
-          dateString,
-          label,
-          dayName,
-          isPast: false,
-          isWeekend: false
-        });
+        list.push({ dateString, label, dayName, isPast: false, isWeekend: false });
       }
       current.setDate(current.getDate() + 1);
     }
     setDays(list);
-    // Select the first day by default
-    if (list.length > 0) {
-      setSelectedDate(list[0].dateString);
-    }
+    if (list.length > 0) setSelectedDate(list[0].dateString);
   }, []);
 
-  // Initialize Auth State on mount
+  // Initialize Auth State
   useEffect(() => {
     const unsubscribe = initAuth(
       (currentUser, currentToken) => {
         setUser(currentUser);
-        if (currentToken) {
-          setToken(currentToken);
-        }
+        if (currentToken) setToken(currentToken);
       },
-      () => {
-        setUser(null);
-        setToken(null);
-      }
+      () => { setUser(null); setToken(null); }
     );
     return () => unsubscribe();
   }, []);
@@ -83,10 +65,7 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
     setIsLoading(true);
     try {
       const result = await googleSignIn();
-      if (result) {
-        setUser(result.user);
-        setToken(result.accessToken);
-      }
+      if (result) { setUser(result.user); setToken(result.accessToken); }
     } catch (err: any) {
       console.error('Sign in failure:', err);
       setError('Could not establish secure synchronization with Google. Please try again.');
@@ -97,42 +76,26 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
 
   const handleLogout = async () => {
     await logout();
-    setUser(null);
-    setToken(null);
-    setSuccessEvent(null);
+    setUser(null); setToken(null); setSuccessEvent(null);
   };
 
   const slots = {
-    morning: ["09:00 AM", "10:00 AM", "11:00 AM"],
-    afternoon: ["01:30 PM", "02:30 PM", "03:30 PM", "04:30 PM"]
+    morning: ['09:00 AM', '10:00 AM', '11:00 AM'],
+    afternoon: ['01:30 PM', '02:30 PM', '03:30 PM', '04:30 PM'],
   };
 
   const formatSlotTime24h = (dateStr: string, timeStr12h: string): { start: string; end: string } => {
-    // Parse "09:00 AM" or "02:30 PM"
     const [time, modifier] = timeStr12h.split(' ');
     let [hours, minutes] = time.split(':');
     let hrs = parseInt(hours, 10);
-    if (modifier === 'PM' && hrs < 12) {
-      hrs += 12;
-    }
-    if (modifier === 'AM' && hrs === 12) {
-      hrs = 0;
-    }
-    
+    if (modifier === 'PM' && hrs < 12) hrs += 12;
+    if (modifier === 'AM' && hrs === 12) hrs = 0;
     const formattedHrs = String(hrs).padStart(2, '0');
     const startIso = `${dateStr}T${formattedHrs}:${minutes}:00`;
-    
-    // Add 45 minutes for the end time
     let endMins = parseInt(minutes, 10) + 45;
     let endHrs = hrs;
-    if (endMins >= 60) {
-      endMins -= 60;
-      endHrs += 1;
-    }
-    const formattedEndHrs = String(endHrs).padStart(2, '0');
-    const formattedEndMins = String(endMins).padStart(2, '0');
-    const endIso = `${dateStr}T${formattedEndHrs}:${formattedEndMins}:00`;
-
+    if (endMins >= 60) { endMins -= 60; endHrs += 1; }
+    const endIso = `${dateStr}T${String(endHrs).padStart(2, '0')}:${String(endMins).padStart(2, '0')}:00`;
     return { start: startIso, end: endIso };
   };
 
@@ -142,46 +105,26 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
     try {
       const timeZone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'America/New_York';
       const { start, end } = formatSlotTime24h(booking.date, booking.timeSlot);
-
       const eventBody = {
         summary: 'Breakthrough & Values Alignment Session',
         description: `Your personal transformation and perception-shifting breakthrough review with your facilitator.\n\nTimezone: ${timeZone}\nConfirmed email: ${user?.email || userEmail || 'Intake Client'}\nWe will evaluate your 7 areas of life objectives and release the blockages.`,
-        start: {
-          dateTime: start,
-          timeZone: timeZone,
-        },
-        end: {
-          dateTime: end,
-          timeZone: timeZone,
-        },
-        reminders: {
-          useDefault: false,
-          overrides: [
-            { method: 'email', minutes: 24 * 65 },
-            { method: 'popup', minutes: 45 }
-          ]
-        },
+        start: { dateTime: start, timeZone },
+        end: { dateTime: end, timeZone },
+        reminders: { useDefault: false, overrides: [{ method: 'email', minutes: 24 * 65 }, { method: 'popup', minutes: 45 }] },
         attendees: [
           ...(user?.email ? [{ email: user.email }] : []),
           ...(userEmail && userEmail !== user?.email ? [{ email: userEmail }] : [])
         ]
       };
-
       const res = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary/events', {
         method: 'POST',
-        headers: {
-          Authorization: `Bearer ${userAccessToken}`,
-          'Content-Type': 'application/json'
-        },
+        headers: { Authorization: `Bearer ${userAccessToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify(eventBody)
       });
-
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        console.error('Google Calendar Error details:', errData);
         throw new Error(errData.error?.message || 'Failed to insert calendar event.');
       }
-
       const responseData = await res.json();
       setSuccessEvent(responseData);
       onBooked(booking, true);
@@ -194,49 +137,70 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
   };
 
   const handleBookSession = () => {
-    if (!selectedSlot) {
-      setError("Please select an inspiring consultation time slot first.");
-      return;
-    }
-
-    const booking: BookingState = {
-      date: selectedDate,
-      timeSlot: selectedSlot
-    };
-
-    if (token) {
-      // Create actual Google Calendar Event
-      scheduleGoogleEvent(booking, token);
-    } else {
-      // Manual Booking (saved in client state / local storage)
-      onBooked(booking, false);
-    }
+    if (!selectedSlot) { setError('Please select an inspiring consultation time slot first.'); return; }
+    const booking: BookingState = { date: selectedDate, timeSlot: selectedSlot };
+    if (token) { scheduleGoogleEvent(booking, token); }
+    else { onBooked(booking, false); }
   };
 
   const selectedDayLabel = days.find(d => d.dateString === selectedDate)?.label || '';
 
   return (
-    <div id="scheduler-container" className="space-y-8 text-stone-200">
+    <div id="scheduler-container" className="space-y-8">
+
+      {/* Header */}
       <div>
-        <h3 className="text-2xl sm:text-3xl font-display font-bold text-white tracking-wide leading-snug uppercase flex items-center gap-2">
-          <CalendarRange className="w-5 h-5 text-white shrink-0" /> Breakthrough Booking & Alignment
+        <h3 style={{
+          fontFamily: 'var(--font-display)', fontWeight: 700,
+          fontSize: 'clamp(1.4rem, 3vw, 1.9rem)',
+          color: '#F5F3EF', letterSpacing: '0.01em', lineHeight: 1.2,
+          display: 'flex', alignItems: 'center', gap: 12,
+        }}>
+          <div style={{
+            width: 36, height: 36, flexShrink: 0,
+            background: 'rgba(202,138,4,0.08)',
+            border: '1px solid rgba(202,138,4,0.3)',
+            borderRadius: 8,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>
+            <CalendarRange style={{ width: 16, height: 16, color: 'var(--gold)' }} />
+          </div>
+          Breakthrough Booking & Alignment
         </h3>
-        <p className="text-sm text-stone-400 mt-1.5 leading-relaxed font-sans font-light">
-          Finalize your high-performance schedule. Select a convenient date and choice of morning or afternoon block below to solidify your 45-minute intake session.
+        <p style={{
+          marginTop: 10, fontFamily: 'var(--font-sans)', fontSize: 14,
+          color: 'var(--text-secondary)', lineHeight: 1.7, fontWeight: 400,
+        }}>
+          Finalize your high-performance schedule. Select a convenient date and time block to solidify your 45-minute intake session.
         </p>
       </div>
 
+      {/* Date + Time Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Date Grid Selector */}
+
+        {/* Date Grid */}
         <div className="lg:col-span-7 space-y-4">
-          <div className="flex justify-between items-center border-b border-stone-850 pb-2">
-            <label className="text-xs font-mono uppercase tracking-wider text-stone-400 font-medium">
+          <div style={{
+            display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+            paddingBottom: 10, borderBottom: '1px solid var(--border-subtle)',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: 10,
+              letterSpacing: '0.16em', textTransform: 'uppercase',
+              color: 'var(--text-muted)', fontWeight: 500,
+            }}>
               Select Available Date
-            </label>
-            <span className="text-xs font-mono text-stone-500">Business Days Only</span>
+            </span>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: 9,
+              letterSpacing: '0.12em', textTransform: 'uppercase',
+              color: 'var(--text-muted)',
+            }}>
+              Business Days Only
+            </span>
           </div>
 
-          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          <div className="grid grid-cols-3 sm:grid-cols-4 gap-2">
             {days.map((d) => {
               const isSelected = selectedDate === d.dateString;
               return (
@@ -244,24 +208,30 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
                   key={d.dateString}
                   id={`date-cell-${d.dateString}`}
                   type="button"
-                  onClick={() => {
-                    setSelectedDate(d.dateString);
-                    setSelectedSlot('');
-                    setError(null);
-                  }}
-                  className={`p-3.5 rounded-2xl text-center transition-all cursor-pointer border ${
-                    isSelected
-                      ? 'border-white bg-white text-stone-950 shadow-md font-bold'
-                      : 'border-stone-200 bg-stone-100 hover:bg-stone-200 hover:border-stone-300 text-stone-900'
-                  }`}
+                  onClick={() => { setSelectedDate(d.dateString); setSelectedSlot(''); setError(null); }}
+                  className={`date-cell${isSelected ? ' selected' : ''}`}
                 >
-                  <div className={`text-[10px] font-mono uppercase tracking-wider font-bold ${isSelected ? 'text-stone-800' : 'text-stone-500'}`}>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 9,
+                    letterSpacing: '0.14em', textTransform: 'uppercase', fontWeight: 700,
+                    color: isSelected ? 'var(--gold)' : 'var(--text-muted)',
+                    transition: 'color 250ms ease',
+                  }}>
                     {d.dayName}
                   </div>
-                  <div className={`text-base font-bold font-display mt-0.5 tracking-wider ${isSelected ? 'text-stone-950' : 'text-stone-900'}`}>
+                  <div style={{
+                    fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: 18,
+                    color: isSelected ? '#EAB308' : 'var(--text-primary)',
+                    marginTop: 4, letterSpacing: '0.02em',
+                    transition: 'color 250ms ease',
+                  }}>
                     {d.label.split(' ')[1]}
                   </div>
-                  <div className={`text-[10px] ${isSelected ? 'text-stone-800' : 'text-stone-500'} mt-0.5 font-mono`}>
+                  <div style={{
+                    fontFamily: 'var(--font-mono)', fontSize: 9,
+                    color: isSelected ? 'rgba(202,138,4,0.75)' : 'var(--text-muted)',
+                    marginTop: 2, transition: 'color 250ms ease',
+                  }}>
                     {d.label.split(' ')[0]}
                   </div>
                 </button>
@@ -270,108 +240,141 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
           </div>
         </div>
 
-        {/* Time Slots Selector */}
-        <div className="lg:col-span-5 space-y-6">
-          <div className="border-b border-stone-850 pb-2">
-            <label className="text-xs font-mono uppercase tracking-wider text-stone-400 font-medium">
+        {/* Time Slots */}
+        <div className="lg:col-span-5 space-y-5">
+          <div style={{
+            paddingBottom: 10, borderBottom: '1px solid var(--border-subtle)',
+          }}>
+            <span style={{
+              fontFamily: 'var(--font-mono)', fontSize: 10,
+              letterSpacing: '0.16em', textTransform: 'uppercase',
+              color: 'var(--text-muted)', fontWeight: 500,
+            }}>
               Available Hours: {selectedDayLabel || 'Select Date'}
-            </label>
+            </span>
           </div>
 
           <div className="space-y-5">
-            {/* Morning Slots */}
+            {/* Morning */}
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-stone-400 block mb-2 font-medium">Morning Core</span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 9,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: 'var(--text-muted)', display: 'block', marginBottom: 8,
+              }}>
+                Morning Core
+              </span>
               <div className="grid grid-cols-3 gap-2">
-                {slots.morning.map((slot) => {
-                  const isSelected = selectedSlot === slot;
-                  return (
-                    <button
-                      key={slot}
-                      id={`slot-btn-morning-${slot.replace(/:/g, '-').replace(/\s+/g, '-').toLowerCase()}`}
-                      type="button"
-                      onClick={() => {
-                        setSelectedSlot(slot);
-                        setError(null);
-                      }}
-                      className={`py-3 px-2 text-sm font-semibold border rounded-xl text-center transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-white bg-white text-stone-950 font-bold'
-                          : 'border-stone-200 bg-stone-100 hover:bg-stone-200 hover:border-stone-300 text-stone-900'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
+                {slots.morning.map((slot) => (
+                  <button
+                    key={slot}
+                    id={`slot-btn-morning-${slot.replace(/:/g, '-').replace(/\s+/g, '-').toLowerCase()}`}
+                    type="button"
+                    onClick={() => { setSelectedSlot(slot); setError(null); }}
+                    className={`time-slot${selectedSlot === slot ? ' selected' : ''}`}
+                  >
+                    {slot}
+                  </button>
+                ))}
               </div>
             </div>
 
-            {/* Afternoon Slots */}
+            {/* Afternoon */}
             <div>
-              <span className="text-[11px] font-mono uppercase tracking-wider text-stone-400 block mb-2 font-medium">Afternoon Core</span>
+              <span style={{
+                fontFamily: 'var(--font-mono)', fontSize: 9,
+                letterSpacing: '0.16em', textTransform: 'uppercase',
+                color: 'var(--text-muted)', display: 'block', marginBottom: 8,
+              }}>
+                Afternoon Core
+              </span>
               <div className="grid grid-cols-2 gap-2">
-                {slots.afternoon.map((slot) => {
-                  const isSelected = selectedSlot === slot;
-                  return (
-                    <button
-                      key={slot}
-                      id={`slot-btn-afternoon-${slot.replace(/:/g, '-').replace(/\s+/g, '-').toLowerCase()}`}
-                      type="button"
-                      onClick={() => {
-                        setSelectedSlot(slot);
-                        setError(null);
-                      }}
-                      className={`py-3 px-2 text-sm font-semibold border rounded-xl text-center transition-all cursor-pointer ${
-                        isSelected
-                          ? 'border-white bg-white text-stone-950 font-bold'
-                          : 'border-stone-200 bg-stone-100 hover:bg-stone-200 hover:border-stone-300 text-stone-900'
-                      }`}
-                    >
-                      {slot}
-                    </button>
-                  );
-                })}
+                {slots.afternoon.map((slot) => (
+                  <button
+                    key={slot}
+                    id={`slot-btn-afternoon-${slot.replace(/:/g, '-').replace(/\s+/g, '-').toLowerCase()}`}
+                    type="button"
+                    onClick={() => { setSelectedSlot(slot); setError(null); }}
+                    className={`time-slot${selectedSlot === slot ? ' selected' : ''}`}
+                  >
+                    {slot}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Sync with Google section */}
-      <div className="border-t border-stone-850 pt-6 mt-8">
-        <div className="bg-black p-5 border-metallic rounded-2xl flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div className="space-y-1 max-w-xl">
-            <h4 className="text-sm font-display font-bold text-white flex items-center gap-1.5 tracking-wider uppercase">
-              <CalendarIcon className="w-4 h-4 text-stone-300 shrink-0" /> Google Calendar Integration
-            </h4>
-            <p className="text-sm text-stone-400 leading-relaxed font-sans font-light">
-              Connect with your Google Account to push this high-performance breakthrough session directly into your primary workspace calendar, triggering automatic HIPAA-compliant de-identified reminders.
-            </p>
-          </div>
+      {/* Google Calendar Integration Panel */}
+      <div style={{ borderTop: '1px solid var(--border-subtle)', paddingTop: 28 }}>
+        <div style={{
+          background: 'rgba(8,7,6,0.65)',
+          border: '1px solid rgba(202,138,4,0.12)',
+          borderRadius: 16,
+          padding: '20px 24px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: 16,
+        }}>
+          {/* Panel header */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: 14 }}>
+            <div style={{ maxWidth: 520 }}>
+              <h4 style={{
+                fontFamily: 'var(--font-heading)', fontWeight: 700,
+                fontSize: 13, letterSpacing: '0.12em', textTransform: 'uppercase',
+                color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: 8,
+                marginBottom: 6,
+              }}>
+                <CalendarIcon style={{ width: 14, height: 14, color: 'var(--gold)', flexShrink: 0 }} />
+                Google Calendar Integration
+              </h4>
+              <p style={{
+                fontFamily: 'var(--font-sans)', fontSize: 13,
+                color: 'var(--text-secondary)', lineHeight: 1.6,
+              }}>
+                Connect your Google Account to push this breakthrough session directly into your calendar, triggering automatic de-identified reminders.
+              </p>
+            </div>
 
-          <div>
+            {/* Auth control */}
             {user ? (
-              <div className="flex items-center gap-3 bg-stone-100 p-3 rounded-2xl border border-stone-200 text-stone-950 shadow-sm">
+              <div style={{
+                display: 'flex', alignItems: 'center', gap: 10,
+                background: 'rgba(20,17,13,0.9)',
+                border: '1px solid rgba(202,138,4,0.2)',
+                borderRadius: 12, padding: '10px 14px',
+              }}>
                 {user.photoURL && (
                   <img
                     src={user.photoURL}
                     alt="Google Profile"
-                    className="w-9 h-9 rounded-full border border-stone-300"
+                    style={{ width: 32, height: 32, borderRadius: '50%', border: '1px solid rgba(202,138,4,0.25)' }}
                     referrerPolicy="no-referrer"
                   />
                 )}
                 <div>
-                  <div className="text-sm font-semibold text-stone-950">{user.displayName}</div>
-                  <div className="text-xs text-stone-600 truncate max-w-[140px] font-mono">{user.email}</div>
+                  <div style={{ fontFamily: 'var(--font-sans)', fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
+                    {user.displayName}
+                  </div>
+                  <div style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {user.email}
+                  </div>
                 </div>
                 <button
                   id="google-disconnect-btn"
                   onClick={handleLogout}
                   title="Disconnect account"
-                  className="p-1.5 hover:bg-stone-200 text-stone-750 hover:text-stone-950 rounded-full transition-colors cursor-pointer ml-1"
+                  style={{
+                    padding: 6, borderRadius: '50%', border: 'none',
+                    background: 'transparent', cursor: 'pointer',
+                    color: 'var(--text-muted)',
+                    transition: 'color 200ms ease',
+                  }}
+                  onMouseEnter={e => (e.currentTarget.style.color = 'var(--text-primary)')}
+                  onMouseLeave={e => (e.currentTarget.style.color = 'var(--text-muted)')}
                 >
-                  <LogOut className="w-4 h-4" />
+                  <LogOut style={{ width: 14, height: 14 }} />
                 </button>
               </div>
             ) : (
@@ -380,28 +383,36 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
                 type="button"
                 disabled={isLoading}
                 onClick={handleGoogleSignIn}
-                className="inline-flex items-center gap-2 px-5 py-3 border border-stone-200 hover:border-stone-300 bg-stone-100 hover:bg-stone-200 text-stone-950 rounded-full text-xs font-semibold transition-all cursor-pointer disabled:opacity-50"
+                style={{
+                  display: 'inline-flex', alignItems: 'center', gap: 8,
+                  padding: '10px 18px',
+                  background: 'rgba(20,17,13,0.9)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 9999,
+                  fontFamily: 'var(--font-heading)', fontSize: 11,
+                  fontWeight: 600, letterSpacing: '0.10em', textTransform: 'uppercase',
+                  color: 'var(--text-secondary)',
+                  cursor: 'pointer',
+                  transition: 'all 250ms ease',
+                  opacity: isLoading ? 0.5 : 1,
+                }}
+                onMouseEnter={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(202,138,4,0.25)';
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-primary)';
+                }}
+                onMouseLeave={e => {
+                  (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.1)';
+                  (e.currentTarget as HTMLButtonElement).style.color = 'var(--text-secondary)';
+                }}
               >
                 {isLoading ? (
-                  <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                  <RefreshCw style={{ width: 14, height: 14, animation: 'gold-spin 1s linear infinite' }} />
                 ) : (
-                  <svg className="w-4 h-4 shrink-0" viewBox="0 0 24 24">
-                    <path
-                      fill="#4285F4"
-                      d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.53-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-8.82z"
-                    />
-                    <path
-                      fill="#34A853"
-                      d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.11 0-5.74-2.11-6.68-4.96H1.21v3.15C3.18 21.88 7.31 24 12 24z"
-                    />
-                    <path
-                      fill="#FBBC05"
-                      d="M5.32 14.24A7.16 7.16 0 0 1 4.91 12c0-.79.13-1.57.38-2.31V6.54H1.21A11.94 11.94 0 0 0 0 12c0 2.01.5 3.91 1.21 5.62l4.11-3.38z"
-                    />
-                    <path
-                      fill="#EA4335"
-                      d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.62l4.11 3.38c.94-2.85 3.57-4.96 6.68-4.96z"
-                    />
+                  <svg style={{ width: 14, height: 14, flexShrink: 0 }} viewBox="0 0 24 24">
+                    <path fill="#4285F4" d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.53-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-8.82z" />
+                    <path fill="#34A853" d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.11 0-5.74-2.11-6.68-4.96H1.21v3.15C3.18 21.88 7.31 24 12 24z" />
+                    <path fill="#FBBC05" d="M5.32 14.24A7.16 7.16 0 0 1 4.91 12c0-.79.13-1.57.38-2.31V6.54H1.21A11.94 11.94 0 0 0 0 12c0 2.01.5 3.91 1.21 5.62l4.11-3.38z" />
+                    <path fill="#EA4335" d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.31 0 3.18 2.12 1.21 5.62l4.11 3.38c.94-2.85 3.57-4.96 6.68-4.96z" />
                   </svg>
                 )}
                 Connect Google Calendar
@@ -411,40 +422,68 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
         </div>
       </div>
 
+      {/* Error Banner */}
       {error && (
-        <div id="scheduler-error-banner" className="p-4 bg-red-950/20 border border-red-900/40 rounded-xl text-red-400 flex items-start gap-2.5 text-xs font-mono">
-          <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-          <span>{error}</span>
+        <div id="scheduler-error-banner" style={{
+          padding: '14px 18px',
+          background: 'rgba(185,28,28,0.08)',
+          border: '1px solid rgba(185,28,28,0.25)',
+          borderRadius: 12,
+          display: 'flex', alignItems: 'flex-start', gap: 10,
+        }}>
+          <AlertCircle style={{ width: 14, height: 14, color: 'rgba(239,68,68,0.8)', flexShrink: 0, marginTop: 1 }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'rgba(239,68,68,0.8)', letterSpacing: '0.06em' }}>
+            {error}
+          </span>
         </div>
       )}
 
-      {/* Success Details */}
+      {/* Google Success Card */}
       {successEvent && (
-        <div id="scheduler-google-success-card" className="p-4 bg-emerald-950/20 border border-emerald-900/40 rounded-2xl text-stone-300 flex flex-col gap-2 text-xs">
-          <div className="flex items-center gap-1.5 font-bold text-emerald-400 font-mono">
-            <Check className="w-4 h-4 text-emerald-400" /> Google Calendar Event Synced Successfully!
+        <div id="scheduler-google-success-card" style={{
+          padding: '16px 20px',
+          background: 'rgba(16,185,129,0.06)',
+          border: '1px solid rgba(16,185,129,0.2)',
+          borderRadius: 14,
+          display: 'flex', flexDirection: 'column', gap: 10,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Check style={{ width: 14, height: 14, color: '#34d399' }} />
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700, color: '#34d399', letterSpacing: '0.10em', textTransform: 'uppercase' }}>
+              Google Calendar Event Synced Successfully
+            </span>
           </div>
-          <p className="text-stone-300 leading-relaxed font-sans">
-            The session has been written live to <strong>{user?.email}</strong>'s calendar and dispatched invites.
+          <p style={{ fontFamily: 'var(--font-sans)', fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+            The session has been written live to <strong style={{ color: 'var(--text-primary)' }}>{user?.email}</strong>'s calendar and invites dispatched.
           </p>
-          <div className="flex items-center gap-3 mt-1">
-            <a
-              id="view-calendar-link"
-              href={successEvent.htmlLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1 text-xs text-white font-bold underline hover:text-stone-300 font-mono"
-            >
-              Open Calendar <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
+          <a
+            id="view-calendar-link"
+            href={successEvent.htmlLink}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              fontFamily: 'var(--font-mono)', fontSize: 11, fontWeight: 700,
+              color: 'var(--gold)', letterSpacing: '0.08em',
+              textDecoration: 'none',
+            }}
+          >
+            Open Calendar <ExternalLink style={{ width: 11, height: 11 }} />
+          </a>
         </div>
       )}
 
       {/* Booking Actions */}
-      <div className="flex flex-col sm:flex-row items-center gap-4 pt-4 justify-between border-t border-stone-850">
-        <div className="flex items-center gap-2 text-stone-400 text-sm font-mono font-light">
-          <Clock className="w-4 h-4 text-stone-450" /> Duration: 45 Minute Intense Perception Shift
+      <div style={{
+        display: 'flex', flexDirection: 'row', alignItems: 'center',
+        justifyContent: 'space-between', flexWrap: 'wrap', gap: 16,
+        paddingTop: 20, borderTop: '1px solid var(--border-subtle)',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Clock style={{ width: 14, height: 14, color: 'var(--text-muted)' }} />
+          <span style={{ fontFamily: 'var(--font-mono)', fontSize: 11, color: 'var(--text-muted)', letterSpacing: '0.08em' }}>
+            Duration: 45-Minute Intense Perception Shift
+          </span>
         </div>
 
         <button
@@ -452,19 +491,22 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
           type="button"
           disabled={isLoading || !selectedSlot}
           onClick={handleBookSession}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4.5 bg-white hover:bg-stone-100 text-stone-950 rounded-full font-heading text-xs font-bold uppercase tracking-widest transition-all shadow-md cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+          className="btn-gold"
         >
           {isLoading ? (
             <>
-              <RefreshCw className="w-4 h-4 animate-spin" /> Aligning & Reserving...
+              <RefreshCw style={{ width: 14, height: 14, animation: 'gold-spin 1s linear infinite' }} />
+              Aligning & Reserving...
             </>
           ) : token ? (
             <>
-              <Sparkles className="w-4 h-4" /> Sync & Book Breakthrough
+              <Sparkles style={{ width: 14, height: 14 }} />
+              Sync & Book Breakthrough
             </>
           ) : (
             <>
-              <Check className="w-4 h-4" /> Book Breakthrough Session
+              <Check style={{ width: 14, height: 14 }} />
+              Book Breakthrough Session
             </>
           )}
         </button>

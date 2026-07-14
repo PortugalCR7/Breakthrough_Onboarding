@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Layers, Eye, Layout, ShieldAlert, Sparkles, CheckCircle2, FileText, ArrowRight, RefreshCw, Calendar, CalendarCheck, Award, Lock } from 'lucide-react';
+import { Layers, Calendar, CheckCircle2, ArrowRight, RefreshCw, CalendarCheck, Award, Lock, Sparkles } from 'lucide-react';
 import { IntakeFormState, BookingState, Submission } from './types';
 import { INITIAL_FORM_STATE } from './constants';
 import WizardForm from './components/WizardForm';
@@ -19,7 +19,7 @@ export default function App() {
   const [encryptionProgress, setEncryptionProgress] = useState<number>(0);
   const [welcomeAccepted, setWelcomeAccepted] = useState<boolean>(false);
 
-  // Load form state caching and booking status from localStorage on mount
+  // Load form state caching from localStorage on mount
   useEffect(() => {
     try {
       const cached = localStorage.getItem('draft_onboarding_form');
@@ -64,14 +64,11 @@ export default function App() {
           setViewPhase('booking');
           return 100;
         }
-        
-        // Update log logs progressively
         const logStep = Math.floor(prev / 18);
         if (logStep > currentLogIndex && currentLogIndex < logs.length) {
           setEncryptionLog(logs[currentLogIndex]);
           currentLogIndex += 1;
         }
-
         return prev + 2;
       });
     }, 40);
@@ -82,7 +79,6 @@ export default function App() {
     setCurrentBooking(booking);
     setBookingSynced(synced);
 
-    // Package the dossier and booking as a complete clinical record
     const newSubmission: Submission = {
       id: `DOS-${Math.floor(100000 + Math.random() * 900000)}`,
       createdAt: new Date().toISOString(),
@@ -96,14 +92,11 @@ export default function App() {
       const parsed: Submission[] = stored ? JSON.parse(stored) : [];
       parsed.push(newSubmission);
       localStorage.setItem('onboarding_submissions', JSON.stringify(parsed));
-      
-      // Clear current drafts
       localStorage.removeItem('draft_onboarding_form');
     } catch (e) {
       console.error('Error saving breakthrough submission:', e);
     }
 
-    // Transition to success completed state
     setViewPhase('completed');
   };
 
@@ -122,287 +115,643 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-stone-950 text-stone-100 font-sans antialiased flex flex-col selection:bg-stone-800 selection:text-white">
-      
-      {/* Background decoration */}
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(255,255,255,0.02),transparent_45%)] pointer-events-none" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_bottom_left,rgba(255,255,255,0.01),transparent_40%)] pointer-events-none" />
+    <div className="min-h-screen font-sans antialiased flex flex-col" style={{ background: 'var(--surface-base)', color: 'var(--text-primary)' }}>
 
-      {/* Header element */}
-      <header className="border-b border-stone-900 bg-stone-950/90 shrink-0 sticky top-0 z-40 backdrop-blur-md">
-        <div className="max-w-4xl mx-auto px-4 md:px-6 h-20 flex justify-between items-center">
-          
-          {/* Logo Branding */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-stone-900 border border-stone-850 rounded-xl flex items-center justify-center">
-              <Award className="w-5.5 h-5.5 text-stone-100 font-bold" />
+      {/* Ambient background layers */}
+      <div className="fixed inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 80% 60% at 70% -10%, rgba(202,138,4,0.04) 0%, transparent 60%)'
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 60% 50% at 10% 110%, rgba(202,138,4,0.025) 0%, transparent 55%)'
+        }} />
+        <div style={{
+          position: 'absolute', inset: 0,
+          background: 'radial-gradient(ellipse 50% 40% at 50% 50%, rgba(255,255,255,0.008) 0%, transparent 70%)'
+        }} />
+      </div>
+
+      {/* Header */}
+      <header style={{
+        borderBottom: '1px solid var(--border-subtle)',
+        backgroundColor: 'rgba(8,7,6,0.92)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 40,
+      }}>
+        <div className="max-w-4xl mx-auto px-4 md:px-6 h-[72px] flex justify-between items-center">
+
+          {/* Logo */}
+          <div className="flex items-center gap-3.5">
+            <div style={{
+              width: 40, height: 40,
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border-gold)',
+              borderRadius: 10,
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              boxShadow: '0 0 14px rgba(202,138,4,0.12)',
+            }}>
+              <Award style={{ width: 18, height: 18, color: 'var(--gold)' }} />
             </div>
             <div>
-              <span className="text-base font-display font-bold text-white uppercase block">
-                THE BREAKTHROUGH
+              <span style={{
+                display: 'block',
+                fontFamily: 'var(--font-display)',
+                fontWeight: 700,
+                fontSize: 15,
+                color: '#F5F3EF',
+                letterSpacing: '0.06em',
+                textTransform: 'uppercase',
+                lineHeight: 1,
+              }}>
+                The Breakthrough
               </span>
-              <span className="text-[9px] font-heading uppercase tracking-widest text-stone-400 block mt-0.5 font-semibold">
-                EXPERIENCE & VALUES ALIGNMENT
+              <span style={{
+                display: 'block',
+                fontFamily: 'var(--font-heading)',
+                fontSize: 9,
+                fontWeight: 600,
+                letterSpacing: '0.20em',
+                textTransform: 'uppercase',
+                color: 'var(--gold)',
+                marginTop: 4,
+                opacity: 0.8,
+              }}>
+                Experience & Values Alignment
               </span>
             </div>
           </div>
 
-          {/* Access Options & Dashboard portal */}
-          <div className="flex items-center gap-3">
-            <button
-              id="practitioner-portal-toggle-btn"
-              onClick={() => setIsPortalMode(true)}
-              className="px-4 py-1.5 border border-stone-850 hover:border-stone-700 bg-stone-900 hover:bg-stone-850 text-stone-400 hover:text-white rounded-full text-[10px] font-heading uppercase tracking-widest font-semibold transition-all cursor-pointer"
-            >
-              Facilitator Portal
-            </button>
-          </div>
-
+          {/* Facilitator Portal */}
+          <button
+            id="practitioner-portal-toggle-btn"
+            onClick={() => setIsPortalMode(true)}
+            className="btn-ghost"
+            style={{ padding: '8px 18px', fontSize: 10 }}
+          >
+            <Lock style={{ width: 12, height: 12 }} />
+            Facilitator Portal
+          </button>
         </div>
+
+        {/* Gold hairline rule */}
+        <div className="gold-rule" />
       </header>
 
-      {/* Main Body */}
-      <main className="flex-1 max-w-4xl w-full mx-auto px-4 md:px-6 py-10 flex flex-col justify-center relative z-10">
+      {/* Main */}
+      <main className="flex-1 max-w-4xl w-full mx-auto px-4 md:px-6 py-10 flex flex-col justify-center relative" style={{ zIndex: 10 }}>
         <AnimatePresence mode="wait">
-          
-          {/* PHASE 1: Intake Forms */}
+
+          {/* ── PHASE 1: Intake ── */}
           {viewPhase === 'intake' && (
             <motion.div
               key="phase-intake"
-              initial={{ opacity: 0, y: 15 }}
+              initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="space-y-8"
             >
               {!welcomeAccepted ? (
-                /* Welcome Screen inside same card layout */
-                <div className="glass-premium text-stone-100 border-metallic rounded-3xl p-6 md:p-12 shadow-2xl">
-                  <div className="text-center max-w-2xl mx-auto py-4 space-y-8">
-                    <div className="space-y-4">
-                      <div className="mx-auto w-12 h-12 rounded-xl bg-stone-900 border border-stone-850 flex items-center justify-center">
-                        <Sparkles className="w-6 h-6 text-stone-300 animate-pulse" />
+                /* ── Welcome Screen ── */
+                <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
+                  {/* Gold top accent bar */}
+                  <div style={{
+                    height: 2,
+                    background: 'linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent)'
+                  }} />
+
+                  <div className="px-8 py-16 md:px-16 md:py-20 text-center max-w-2xl mx-auto space-y-10">
+                    {/* Icon sigil */}
+                    <motion.div
+                      initial={{ scale: 0.8, opacity: 0 }}
+                      animate={{ scale: 1, opacity: 1 }}
+                      transition={{ delay: 0.1, duration: 0.6, ease: [0.4, 0, 0.2, 1] }}
+                      style={{
+                        margin: '0 auto',
+                        width: 64, height: 64,
+                        borderRadius: 16,
+                        background: 'rgba(202,138,4,0.08)',
+                        border: '1px solid rgba(202,138,4,0.3)',
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        boxShadow: '0 0 32px rgba(202,138,4,0.15)',
+                      }}
+                    >
+                      <Sparkles style={{ width: 28, height: 28, color: 'var(--gold)' }} />
+                    </motion.div>
+
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.2, duration: 0.6 }}
+                      className="space-y-5"
+                    >
+                      <h1 style={{
+                        fontFamily: 'var(--font-display)',
+                        fontWeight: 700,
+                        fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+                        color: '#F5F3EF',
+                        lineHeight: 1.15,
+                        letterSpacing: '-0.01em',
+                      }}>
+                        Welcome to Your<br />
+                        <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>Breakthrough Journey</em>
+                      </h1>
+
+                      {/* Gold ornament */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
+                        <div className="gold-rule" style={{ width: 40 }} />
+                        <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)', opacity: 0.8 }} />
+                        <div className="gold-rule" style={{ width: 40 }} />
                       </div>
-                      <h2 className="text-3xl md:text-5xl font-display font-bold text-white tracking-wide leading-snug">
-                        Welcome to Your Breakthrough Journey
-                      </h2>
-                      <p className="text-xs text-stone-400 font-heading uppercase tracking-widest font-semibold">
+
+                      <p style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 10,
+                        fontWeight: 600,
+                        letterSpacing: '0.22em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-secondary)',
+                      }}>
                         The Beginning of a New Standard
                       </p>
-                    </div>
+                    </motion.div>
 
-                    <div className="space-y-5 text-stone-300 font-sans text-sm leading-relaxed max-w-xl mx-auto">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.35, duration: 0.6 }}
+                      className="space-y-4"
+                      style={{
+                        color: 'var(--text-secondary)',
+                        fontFamily: 'var(--font-sans)',
+                        fontSize: 15,
+                        lineHeight: 1.75,
+                        maxWidth: 480,
+                        margin: '0 auto',
+                      }}
+                    >
                       <p>
                         Congratulations on taking this vital step. Choosing to examine your life with absolute clarity is a rare and powerful decision.
                       </p>
                       <p>
-                        This reflective questionnaire is not an evaluation, an institutional assessment, or a formal test. It is simply the starting point of an important, personalized conversation.
+                        This reflective questionnaire is not an evaluation or a test. It is simply the starting point of an important, personalized conversation — designed to deliver a far more impactful, tailored Discovery Call.
                       </p>
-                      <p>
-                        By offering your honest, unvarnished reflections here, you allow us to deeply understand your context and design a far more impactful, tailored Discovery Call.
-                      </p>
-                    </div>
+                    </motion.div>
 
-                    <div className="pt-4">
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.5, duration: 0.5 }}
+                    >
                       <button
                         id="begin-questionnaire-btn"
                         onClick={() => setWelcomeAccepted(true)}
-                        className="px-10 py-4.5 bg-white hover:bg-stone-100 text-stone-950 rounded-full font-heading text-xs font-bold uppercase tracking-widest transition-all shadow-md active:scale-95 cursor-pointer flex items-center gap-2 mx-auto"
+                        className="btn-gold"
+                        style={{ margin: '0 auto' }}
                       >
                         Begin Reflection
-                        <ArrowRight className="w-4 h-4 text-stone-950" />
+                        <ArrowRight style={{ width: 15, height: 15 }} />
                       </button>
-                    </div>
+                    </motion.div>
+
+                    <motion.p
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.7, duration: 0.5 }}
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'var(--font-mono)',
+                        letterSpacing: '0.12em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: 6,
+                      }}
+                    >
+                      <Lock style={{ width: 10, height: 10 }} />
+                      End-to-end encrypted · De-identified · Confidential
+                    </motion.p>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* Layout Presentation Control Panel */}
-                  <div className="glass-premium p-1.5 rounded-full border-metallic max-w-md mx-auto flex items-center justify-between shadow-lg">
-                    <span className="text-[9px] font-heading text-stone-400 uppercase tracking-widest pl-4 flex items-center gap-1.5 font-semibold">
-                      <Layout className="w-3.5 h-3.5 text-stone-400" /> Intake Presentation Layout
-                    </span>
-                    <div className="flex gap-1">
-                      <button
-                        id="wizard-layout-toggle-btn"
-                        onClick={() => setLayoutMode('wizard')}
-                        className={`px-4 py-1.5 rounded-full text-[10px] font-semibold font-heading tracking-widest uppercase transition-all flex items-center gap-1 cursor-pointer ${
-                          layoutMode === 'wizard'
-                            ? 'bg-stone-100 text-stone-950 font-bold shadow'
-                            : 'text-stone-400 hover:text-white hover:bg-stone-900'
-                        }`}
-                      >
-                        Walkthrough
-                      </button>
-                      <button
-                        id="single-layout-toggle-btn"
-                        onClick={() => setLayoutMode('single')}
-                        className={`px-4 py-1.5 rounded-full text-[10px] font-semibold font-heading tracking-widest uppercase transition-all flex items-center gap-1 cursor-pointer ${
-                          layoutMode === 'single'
-                            ? 'bg-stone-100 text-stone-950 font-bold shadow'
-                            : 'text-stone-400 hover:text-white hover:bg-stone-900'
-                        }`}
-                      >
-                        Single Page
-                      </button>
+                  {/* Layout Toggle */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div className="glass-card" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      padding: 4,
+                      borderRadius: 9999,
+                    }}>
+                      <span style={{
+                        fontFamily: 'var(--font-heading)',
+                        fontSize: 9,
+                        fontWeight: 600,
+                        letterSpacing: '0.18em',
+                        textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                        padding: '0 12px',
+                      }}>
+                        Layout
+                      </span>
+                      {(['wizard', 'single'] as const).map((mode) => (
+                        <button
+                          key={mode}
+                          id={`${mode}-layout-toggle-btn`}
+                          onClick={() => setLayoutMode(mode)}
+                          style={{
+                            padding: '7px 18px',
+                            borderRadius: 9999,
+                            fontFamily: 'var(--font-heading)',
+                            fontSize: 10,
+                            fontWeight: 700,
+                            letterSpacing: '0.14em',
+                            textTransform: 'uppercase',
+                            cursor: 'pointer',
+                            border: 'none',
+                            transition: 'all 250ms ease',
+                            background: layoutMode === mode
+                              ? 'linear-gradient(135deg, #CA8A04, #EAB308)'
+                              : 'transparent',
+                            color: layoutMode === mode ? '#0c0a08' : 'var(--text-muted)',
+                            boxShadow: layoutMode === mode ? '0 2px 12px rgba(202,138,4,0.3)' : 'none',
+                          }}
+                        >
+                          {mode === 'wizard' ? 'Walkthrough' : 'Single Page'}
+                        </button>
+                      ))}
                     </div>
                   </div>
 
-                  {/* Form Card Frame */}
-                  <div className="glass-premium border-metallic rounded-3xl p-6 md:p-10 shadow-2xl text-stone-100">
-                    {layoutMode === 'wizard' ? (
-                      <WizardForm
-                        data={formState}
-                        onChange={handleFormChange}
-                        onSubmit={handleFormSubmit}
-                      />
-                    ) : (
-                      <LongForm
-                        data={formState}
-                        onChange={handleFormChange}
-                        onSubmit={handleFormSubmit}
-                      />
-                    )}
+                  {/* Form Card */}
+                  <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
+                    <div style={{
+                      height: 2,
+                      background: 'linear-gradient(90deg, transparent, rgba(202,138,4,0.6), rgba(234,179,8,0.8), rgba(202,138,4,0.6), transparent)'
+                    }} />
+                    <div className="p-6 md:p-10">
+                      {layoutMode === 'wizard' ? (
+                        <WizardForm
+                          data={formState}
+                          onChange={handleFormChange}
+                          onSubmit={handleFormSubmit}
+                        />
+                      ) : (
+                        <LongForm
+                          data={formState}
+                          onChange={handleFormChange}
+                          onSubmit={handleFormSubmit}
+                        />
+                      )}
+                    </div>
                   </div>
                 </>
               )}
             </motion.div>
           )}
 
-          {/* PHASE 1.5: Encryption Loading Screen */}
+          {/* ── PHASE 1.5: Loading ── */}
           {viewPhase === 'loading' && (
             <motion.div
               key="phase-loading"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="max-w-md w-full mx-auto glass-premium rounded-3xl p-8 border-metallic shadow-2xl space-y-8 text-center text-stone-100 py-12"
-            >
-              <div className="space-y-3">
-                <div className="relative mx-auto w-16 h-16 rounded-2xl border border-stone-850 flex items-center justify-center bg-stone-950">
-                  <RefreshCw className="w-6 h-6 text-white animate-spin" />
-                  <div className="absolute inset-0 rounded-2xl border-t border-white animate-pulse" />
-                </div>
-                <h3 className="text-2xl font-display font-bold text-white tracking-wide leading-snug">Compiling Breakthrough Vectors</h3>
-                <p className="text-xs text-stone-400 font-sans font-light">Structuring values hierarchy and aligning transformational coordinates.</p>
-              </div>
-
-              {/* Progress Bar */}
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-mono text-stone-400 tracking-wider font-semibold">
-                  <span>SECURE LEDGER DISPATCH</span>
-                  <span className="text-white font-bold">{encryptionProgress}%</span>
-                </div>
-                <div className="w-full h-[6px] bg-stone-900 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-white transition-all duration-75 rounded-full"
-                    style={{ width: `${encryptionProgress}%` }}
-                  />
-                </div>
-              </div>
-
-              {/* Log stream */}
-              <div className="p-4 bg-stone-950 rounded-2xl border border-stone-850 h-20 flex items-center justify-center text-center">
-                <AnimatePresence mode="wait">
-                  <motion.p
-                    key={encryptionLog}
-                    initial={{ opacity: 0, y: 5 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -5 }}
-                    transition={{ duration: 0.2 }}
-                    className="text-[9px] font-mono text-stone-300 uppercase tracking-widest leading-relaxed font-semibold"
-                  >
-                    {encryptionLog}
-                  </motion.p>
-                </AnimatePresence>
-              </div>
-            </motion.div>
-          )}
-
-          {/* PHASE 2: Booking Scheduler */}
-          {viewPhase === 'booking' && (
-            <motion.div
-              key="phase-booking"
-              initial={{ opacity: 0, y: 15 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -15 }}
-              transition={{ duration: 0.4 }}
-              className="glass-premium border-metallic rounded-3xl p-6 md:p-10 shadow-2xl"
-            >
-              <Scheduler
-                onBooked={handleBookingCompleted}
-                userEmail={formState.personalProfile.email}
-              />
-            </motion.div>
-          )}
-
-          {/* PHASE 3: Completed Success Screen */}
-          {viewPhase === 'completed' && (
-            <motion.div
-              key="phase-completed"
-              initial={{ opacity: 0, scale: 0.98 }}
+              initial={{ opacity: 0, scale: 0.97 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: 0.4 }}
-              className="max-w-xl w-full mx-auto glass-premium rounded-3xl p-8 md:p-10 border-metallic shadow-2xl text-center space-y-8 text-stone-100"
+              transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+              className="max-w-md w-full mx-auto"
             >
-              <div className="space-y-3">
-                <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-950/20 border border-emerald-900/40 flex items-center justify-center shadow-sm">
-                  <CheckCircle2 className="w-7 h-7 text-emerald-400" />
-                </div>
-                <h2 className="text-3xl font-display font-bold text-white tracking-wide leading-snug">Breakthrough Ledger Compiled & Session Reserved</h2>
-                <p className="text-xs text-stone-300 max-w-sm mx-auto leading-relaxed font-sans font-light">
-                  Your life vectors have been compiled. Your private Breakthrough Experience & values alignment consultation is officially scheduled.
-                </p>
-              </div>
-
-              {/* Booking Confirmation details */}
-              {currentBooking && (
-                <div className="bg-black/40 border border-white/10 p-5 text-left space-y-4 rounded-2xl">
-                  <div className="flex items-start gap-3">
-                    <Calendar className="w-5 h-5 text-stone-300 shrink-0 mt-0.5" />
-                    <div>
-                      <span className="text-[10px] font-mono text-stone-400 uppercase tracking-widest block font-bold">Confirmed Consultation Time</span>
-                      <span className="text-lg font-display font-semibold text-white block mt-1 uppercase tracking-normal">
-                        {new Date(currentBooking.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
-                      </span>
-                      <span className="text-xs font-mono text-stone-300 font-semibold block mt-0.5">
-                        Hours: {currentBooking.timeSlot} (45-Minute Intense Breakthrough Session)
-                      </span>
+              <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
+                <div style={{
+                  height: 2,
+                  background: 'linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent)',
+                }} />
+                <div className="p-10 text-center space-y-9">
+                  {/* Orbital Spinner */}
+                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                    <div style={{ position: 'relative', width: 72, height: 72 }}>
+                      {/* Outer ring */}
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        borderRadius: '50%',
+                        border: '1px solid rgba(202,138,4,0.15)',
+                      }} />
+                      {/* Inner dim ring */}
+                      <div style={{
+                        position: 'absolute', inset: 12,
+                        borderRadius: '50%',
+                        border: '1px solid rgba(202,138,4,0.08)',
+                      }} />
+                      {/* Center sigil */}
+                      <div style={{
+                        position: 'absolute', inset: 0,
+                        display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      }}>
+                        <div style={{
+                          width: 28, height: 28,
+                          borderRadius: 8,
+                          background: 'rgba(202,138,4,0.08)',
+                          border: '1px solid rgba(202,138,4,0.25)',
+                          display: 'flex', alignItems: 'center', justifyContent: 'center',
+                        }}>
+                          <Award style={{ width: 14, height: 14, color: 'var(--gold)' }} />
+                        </div>
+                      </div>
+                      {/* Orbiting gold dot */}
+                      <div style={{
+                        position: 'absolute',
+                        top: '50%', left: '50%',
+                        width: 8, height: 8,
+                        marginTop: -4, marginLeft: -4,
+                        borderRadius: '50%',
+                        background: 'var(--gold)',
+                        boxShadow: '0 0 12px var(--gold-glow)',
+                        animation: 'orbit 2s linear infinite',
+                        transformOrigin: '-28px center',
+                      }} />
                     </div>
                   </div>
 
-                  {bookingSynced && (
-                    <div className="p-3 bg-emerald-950/20 border border-emerald-900/40 rounded-xl flex items-center gap-2 text-xs text-emerald-400 font-medium">
-                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0 animate-ping" />
-                      <span className="font-mono text-[10px] uppercase tracking-wider">Google Calendar sync complete. Secure invites dispatched.</span>
+                  <div className="space-y-2">
+                    <h3 style={{
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: 24,
+                      color: '#F5F3EF',
+                      letterSpacing: '0.01em',
+                    }}>
+                      Compiling Breakthrough Vectors
+                    </h3>
+                    <p style={{
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 13,
+                      color: 'var(--text-secondary)',
+                      fontWeight: 400,
+                    }}>
+                      Structuring values hierarchy and aligning transformational coordinates.
+                    </p>
+                  </div>
+
+                  {/* Progress */}
+                  <div className="space-y-2">
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)', fontSize: 9,
+                        letterSpacing: '0.15em', textTransform: 'uppercase',
+                        color: 'var(--text-muted)',
+                      }}>
+                        Secure Ledger Dispatch
+                      </span>
+                      <span style={{
+                        fontFamily: 'var(--font-mono)', fontSize: 11,
+                        fontWeight: 700, color: 'var(--gold)',
+                      }}>
+                        {encryptionProgress}%
+                      </span>
+                    </div>
+                    <div className="progress-track">
+                      <div
+                        className="progress-fill"
+                        style={{ width: `${encryptionProgress}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Terminal log */}
+                  <div style={{
+                    background: 'rgba(8,7,6,0.9)',
+                    border: '1px solid rgba(202,138,4,0.12)',
+                    borderRadius: 12,
+                    padding: '16px 20px',
+                    minHeight: 72,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  }}>
+                    <AnimatePresence mode="wait">
+                      <motion.p
+                        key={encryptionLog}
+                        initial={{ opacity: 0, y: 4 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -4 }}
+                        transition={{ duration: 0.25 }}
+                        className="terminal-cursor"
+                        style={{
+                          fontFamily: 'var(--font-mono)',
+                          fontSize: 10,
+                          letterSpacing: '0.10em',
+                          textTransform: 'uppercase',
+                          color: 'rgba(202,138,4,0.75)',
+                          lineHeight: 1.5,
+                          textAlign: 'center',
+                        }}
+                      >
+                        {encryptionLog}
+                      </motion.p>
+                    </AnimatePresence>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── PHASE 2: Booking ── */}
+          {viewPhase === 'booking' && (
+            <motion.div
+              key="phase-booking"
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -16 }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            >
+              <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
+                <div style={{
+                  height: 2,
+                  background: 'linear-gradient(90deg, transparent, rgba(202,138,4,0.6), rgba(234,179,8,0.8), rgba(202,138,4,0.6), transparent)'
+                }} />
+                <div className="p-6 md:p-10">
+                  <Scheduler
+                    onBooked={handleBookingCompleted}
+                    userEmail={formState.personalProfile.email}
+                  />
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {/* ── PHASE 3: Completed ── */}
+          {viewPhase === 'completed' && (
+            <motion.div
+              key="phase-completed"
+              initial={{ opacity: 0, scale: 0.97 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+              className="max-w-xl w-full mx-auto"
+            >
+              <div className="glass-liquid border-shimmer rounded-3xl overflow-hidden">
+                <div style={{
+                  height: 2,
+                  background: 'linear-gradient(90deg, transparent, var(--gold), var(--gold-light), var(--gold), transparent)',
+                }} />
+                <div className="p-8 md:p-12 text-center space-y-9">
+                  {/* Success icon */}
+                  <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ delay: 0.1, duration: 0.6, ease: [0.34, 1.56, 0.64, 1] }}
+                    style={{
+                      margin: '0 auto',
+                      width: 64, height: 64,
+                      borderRadius: 16,
+                      background: 'rgba(202,138,4,0.08)',
+                      border: '1px solid rgba(202,138,4,0.35)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 0 32px rgba(202,138,4,0.2)',
+                    }}
+                  >
+                    <CheckCircle2 style={{ width: 28, height: 28, color: 'var(--gold)' }} />
+                  </motion.div>
+
+                  <div className="space-y-4">
+                    <h2 style={{
+                      fontFamily: 'var(--font-display)',
+                      fontWeight: 700,
+                      fontSize: 'clamp(1.6rem, 4vw, 2.4rem)',
+                      color: '#F5F3EF',
+                      lineHeight: 1.2,
+                    }}>
+                      Breakthrough Ledger Compiled<br />
+                      <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>& Session Reserved</em>
+                    </h2>
+
+                    {/* Ornament */}
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+                      <div className="gold-rule" style={{ width: 32 }} />
+                      <div style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--gold)', opacity: 0.7 }} />
+                      <div className="gold-rule" style={{ width: 32 }} />
+                    </div>
+
+                    <p style={{
+                      fontFamily: 'var(--font-sans)',
+                      fontSize: 14,
+                      color: 'var(--text-secondary)',
+                      maxWidth: 380,
+                      margin: '0 auto',
+                      lineHeight: 1.7,
+                    }}>
+                      Your life vectors have been compiled. Your private Breakthrough Experience & values alignment consultation is officially scheduled.
+                    </p>
+                  </div>
+
+                  {/* Booking details card */}
+                  {currentBooking && (
+                    <div style={{
+                      background: 'rgba(8,7,6,0.7)',
+                      border: '1px solid var(--border-gold)',
+                      borderLeft: '3px solid var(--gold)',
+                      borderRadius: 16,
+                      padding: '20px 24px',
+                      textAlign: 'left',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: 14,
+                    }}>
+                      <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
+                        <Calendar style={{ width: 18, height: 18, color: 'var(--gold)', flexShrink: 0, marginTop: 2 }} />
+                        <div>
+                          <span style={{
+                            fontFamily: 'var(--font-mono)', fontSize: 9,
+                            letterSpacing: '0.16em', textTransform: 'uppercase',
+                            color: 'var(--text-muted)', display: 'block', fontWeight: 700,
+                          }}>
+                            Confirmed Consultation Time
+                          </span>
+                          <span style={{
+                            fontFamily: 'var(--font-display)', fontWeight: 600,
+                            fontSize: 20, color: '#F5F3EF',
+                            display: 'block', marginTop: 6, letterSpacing: '0.01em',
+                          }}>
+                            {new Date(currentBooking.date + 'T00:00:00').toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                          </span>
+                          <span style={{
+                            fontFamily: 'var(--font-mono)', fontSize: 12,
+                            color: 'var(--text-secondary)', display: 'block', marginTop: 4,
+                          }}>
+                            {currentBooking.timeSlot} — 45-Minute Breakthrough Session
+                          </span>
+                        </div>
+                      </div>
+
+                      {bookingSynced && (
+                        <div style={{
+                          padding: '10px 14px',
+                          background: 'rgba(16,185,129,0.06)',
+                          border: '1px solid rgba(16,185,129,0.2)',
+                          borderRadius: 10,
+                          display: 'flex', alignItems: 'center', gap: 8,
+                        }}>
+                          <span style={{
+                            width: 6, height: 6,
+                            borderRadius: '50%',
+                            background: '#10b981',
+                            flexShrink: 0,
+                            boxShadow: '0 0 6px rgba(16,185,129,0.6)',
+                          }} />
+                          <span style={{
+                            fontFamily: 'var(--font-mono)', fontSize: 10,
+                            letterSpacing: '0.12em', textTransform: 'uppercase',
+                            color: '#34d399',
+                          }}>
+                            Google Calendar sync complete · Secure invites dispatched
+                          </span>
+                        </div>
+                      )}
                     </div>
                   )}
+
+                  {/* Bio recap */}
+                  <div style={{
+                    borderTop: '1px solid var(--border-subtle)',
+                    paddingTop: 20,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 8,
+                  }}>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                      Client: {formState.personalProfile.lastName}, {formState.personalProfile.firstName}
+                    </span>
+                    <span style={{ fontFamily: 'var(--font-mono)', fontSize: 10, letterSpacing: '0.12em', textTransform: 'uppercase', color: 'var(--text-muted)' }}>
+                      {formState.personalProfile.phone}
+                    </span>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex flex-col sm:flex-row gap-3">
+                    <button
+                      id="submit-new-dossier-btn"
+                      onClick={handleResetSession}
+                      className="btn-gold"
+                      style={{ flex: 1 }}
+                    >
+                      Submit New Ledger
+                    </button>
+                    <button
+                      id="revisit-portal-btn"
+                      onClick={() => setIsPortalMode(true)}
+                      className="btn-ghost"
+                      style={{ flex: 1 }}
+                    >
+                      Facilitator Portal
+                    </button>
+                  </div>
                 </div>
-              )}
-
-              {/* Bio recap */}
-              <div className="border-t border-stone-800 pt-6 flex flex-col sm:flex-row justify-between items-center gap-3 text-[10px] font-mono uppercase tracking-wider text-stone-400">
-                <span>Client: {formState.personalProfile.lastName}, {formState.personalProfile.firstName}</span>
-                <span>Mobile Line: {formState.personalProfile.phone}</span>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <button
-                  id="submit-new-dossier-btn"
-                  onClick={handleResetSession}
-                  className="w-full py-3.5 bg-white hover:bg-stone-100 text-stone-950 rounded-full font-heading text-xs font-bold uppercase tracking-widest transition-all shadow-md cursor-pointer"
-                >
-                  Submit New Ledger
-                </button>
-                <button
-                  id="revisit-portal-btn"
-                  onClick={() => setIsPortalMode(true)}
-                  className="w-full py-3.5 border border-stone-800 hover:border-stone-700 bg-stone-950 text-stone-300 hover:text-white rounded-full font-heading text-xs font-bold uppercase tracking-widest transition-all cursor-pointer"
-                >
-                  Facilitator Portal
-                </button>
               </div>
             </motion.div>
           )}
@@ -410,11 +759,27 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      {/* Footer copyright */}
-      <footer className="border-t border-stone-900 py-6 text-center text-[9px] font-mono uppercase tracking-widest text-stone-500 shrink-0">
-        © 2026 THE BREAKTHROUGH EXPERIENCE. ADVANCED DE-IDENTIFIED INTELLECTUAL LEDGER. ALL RIGHTS RESERVED.
+      {/* Footer */}
+      <footer style={{
+        borderTop: '1px solid var(--border-subtle)',
+        paddingTop: 24, paddingBottom: 24,
+        textAlign: 'center',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: 10,
+        zIndex: 10,
+        position: 'relative',
+      }}>
+        <div className="gold-rule" style={{ width: 60 }} />
+        <span style={{
+          fontFamily: 'var(--font-mono)', fontSize: 9,
+          letterSpacing: '0.18em', textTransform: 'uppercase',
+          color: 'var(--text-muted)',
+        }}>
+          © 2026 The Breakthrough Experience · Advanced De-Identified Intellectual Ledger · All Rights Reserved
+        </span>
       </footer>
-
     </div>
   );
 }
