@@ -616,7 +616,7 @@ function SectionLabel({ label, hint }: { label: string; hint?: string }) {
           display: 'block', marginTop: 4,
           fontFamily: 'var(--font-mono)', fontSize: 9,
           letterSpacing: '0.14em', textTransform: 'uppercase',
-          color: 'var(--text-muted)',
+          color: 'var(--text-secondary)',
         }}>
           ({hint})
         </span>

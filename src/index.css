@@ -320,6 +320,9 @@ body::before {
   color: var(--text-muted);
   font-weight: 400;
 }
+#notes-textarea::placeholder {
+  color: var(--text-secondary);
+}
 .input-dark:hover {
   border-color: var(--border-normal);
   background: var(--glass-2);

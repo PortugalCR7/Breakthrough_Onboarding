@@ -68,7 +68,11 @@ export default function Scheduler({ onBooked, userEmail }: SchedulerProps) {
       if (result) { setUser(result.user); setToken(result.accessToken); }
     } catch (err: any) {
       console.error('Sign in failure:', err);
-      setError('Could not establish secure synchronization with Google. Please try again.');
+      if (err.code === 'auth/unauthorized-domain' || (err.message && err.message.includes('unauthorized-domain'))) {
+        setError('Google sync failed: This domain is not authorized in the Firebase Console. Please add localhost (or your current domain) to "Authorized domains" under Firebase Auth settings.');
+      } else {
+        setError('Could not establish secure synchronization with Google. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
