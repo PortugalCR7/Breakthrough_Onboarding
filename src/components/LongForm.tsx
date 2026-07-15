@@ -121,7 +121,7 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
         className="glass-subtle"
         style={{ borderRadius: 20, padding: '28px 28px' }}
       >
-        <SectionHeader roman="01" title="Primary Contact Information" />
+        <SectionHeader roman="I" title="PRIMARY CONTACT INFORMATION" />
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
           <FieldWrap label="First Name" error={errors.firstName}>
             <input
@@ -217,7 +217,7 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
         className="glass-subtle"
         style={{ borderRadius: 20, padding: '28px 28px' }}
       >
-        <SectionHeader roman="02" title="Transformation Targets" />
+        <SectionHeader roman="II" title="TRANSFORMATION TARGETS" />
 
         {/* Transformation Areas */}
         <div style={{ marginBottom: 28 }}>
@@ -241,9 +241,9 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
                     {isChecked ? rankIndex + 1 : null}
                   </div>
                   <p style={{
-                    fontFamily: 'var(--font-display)', fontWeight: 600,
+                    fontFamily: 'var(--font-sans)', fontWeight: 500,
                     fontSize: 15, letterSpacing: '0.01em',
-                    color: isChecked ? '#EAB308' : 'var(--text-primary)',
+                    color: 'var(--text-primary)',
                     transition: 'color 300ms ease',
                   }}>
                     {area}
@@ -278,7 +278,7 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
         className="glass-subtle"
         style={{ borderRadius: 20, padding: '28px 28px' }}
       >
-        <SectionHeader roman="03" title="Obstacles & Challenges" />
+        <SectionHeader roman="III" title="OBSTACLES & CHALLENGES" />
 
         {/* Primary Struggles */}
         <div style={{ marginBottom: 28 }}>
@@ -358,7 +358,7 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
                   </div>
                   <span style={{
                     fontFamily: 'var(--font-sans)', fontSize: 13,
-                    color: isChecked ? '#EAB308' : 'var(--text-secondary)',
+                    color: 'var(--text-primary)',
                     fontWeight: isChecked ? 600 : 400,
                     transition: 'color 250ms ease',
                   }}>
@@ -430,7 +430,7 @@ export default function LongForm({ data, onChange, onSubmit }: LongFormProps) {
           style={{ paddingLeft: 40, paddingRight: 40 }}
         >
           <Sparkles style={{ width: 15, height: 15 }} />
-          Submit Ledger & Book Session
+          Submit Form & Book Session
         </button>
       </div>
     </form>
@@ -454,6 +454,7 @@ function SectionHeader({ roman, title }: { roman: string; title: string }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
         color: 'var(--gold)',
+        lineHeight: 1,
       }}>
         {roman}
       </div>

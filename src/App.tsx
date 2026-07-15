@@ -262,10 +262,10 @@ export default function App() {
                         fontSize: 'clamp(2rem, 5vw, 3.5rem)',
                         color: '#F5F3EF',
                         lineHeight: 1.15,
-                        letterSpacing: '-0.01em',
+                        letterSpacing: '0.03em',
                       }}>
                         Welcome to Your<br />
-                        <span style={{ color: 'var(--gold-light)', fontStyle: 'normal', letterSpacing: '0.03em' }}>BREAKTHROUGH Experience</span>
+                        <span style={{ color: 'var(--gold-light)', fontStyle: 'normal', letterSpacing: '0.03em' }}>BREAKTHROUGH EXPERIENCE</span>
                       </h1>
 
                       {/* Gold ornament */}

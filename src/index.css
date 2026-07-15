@@ -421,7 +421,7 @@ body::before {
   background: var(--glass-1);
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
-  color: var(--text-secondary);
+  color: var(--text-primary);
   font-family: var(--font-sans);
   font-size: 12px;
   font-weight: 500;
@@ -436,7 +436,7 @@ body::before {
 .tag-pill.selected {
   border-color: var(--gold-dim);
   background: rgba(202, 138, 4, 0.1);
-  color: #EAB308;
+  color: #fff;
   font-weight: 600;
   box-shadow: 0 0 8px rgba(202, 138, 4, 0.15);
 }

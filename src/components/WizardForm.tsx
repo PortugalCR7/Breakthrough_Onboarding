@@ -250,7 +250,7 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               className="space-y-6"
             >
-              <StepHeader roman="I" title="Primary Contact Information" />
+              <StepHeader roman="I" title="PRIMARY CONTACT INFORMATION" />
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
                 <FieldWrap label="First Name" error={errors.firstName}>
@@ -350,7 +350,7 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               className="space-y-6"
             >
-              <StepHeader roman="II" title="Transformation Targets" />
+              <StepHeader roman="II" title="TRANSFORMATION TARGETS" />
 
               {/* Transformation Areas */}
               <div>
@@ -374,9 +374,9 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
                           {isChecked ? rankIndex + 1 : null}
                         </div>
                         <p style={{
-                          fontFamily: 'var(--font-display)', fontWeight: 600,
+                          fontFamily: 'var(--font-sans)', fontWeight: 500,
                           fontSize: 15, letterSpacing: '0.01em',
-                          color: isChecked ? '#EAB308' : 'var(--text-primary)',
+                          color: 'var(--text-primary)',
                           transition: 'color 300ms ease',
                         }}>
                           {area}
@@ -414,7 +414,7 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
               transition={{ duration: 0.35, ease: [0.4, 0, 0.2, 1] }}
               className="space-y-8"
             >
-              <StepHeader roman="III" title="Obstacles & Challenges" />
+              <StepHeader roman="III" title="OBSTACLES & CHALLENGES" />
 
               {/* Primary Struggles */}
               <div>
@@ -496,7 +496,7 @@ export default function WizardForm({ data, onChange, onSubmit }: WizardFormProps
                         </div>
                         <span style={{
                           fontFamily: 'var(--font-sans)', fontSize: 13,
-                          color: isChecked ? '#EAB308' : 'var(--text-secondary)',
+                          color: 'var(--text-primary)',
                           fontWeight: isChecked ? 600 : 400,
                           transition: 'color 250ms ease',
                         }}>
@@ -585,6 +585,7 @@ function StepHeader({ roman, title }: { roman: string; title: string }) {
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         fontFamily: 'var(--font-mono)', fontSize: 13, fontWeight: 700,
         color: 'var(--gold)',
+        lineHeight: 1,
       }}>
         {roman}
       </div>
