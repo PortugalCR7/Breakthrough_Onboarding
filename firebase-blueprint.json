@@ -1,0 +1,39 @@
+{
+  "entities": {
+    "Submission": {
+      "title": "Submission",
+      "description": "Client breakthrough intake dossier and booking details",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique dossier ID starting with DOS-"
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Submission timestamp"
+        },
+        "formData": {
+          "type": "object",
+          "description": "De-identified client intake response"
+        },
+        "booking": {
+          "type": "object",
+          "description": "Scheduled breakthrough consultation details"
+        },
+        "syncedToGoogleCalendar": {
+          "type": "boolean",
+          "description": "Whether the session has been written to Google Calendar"
+        }
+      },
+      "required": ["id", "createdAt", "formData", "syncedToGoogleCalendar"]
+    }
+  },
+  "firestore": {
+    "/submissions/{submissionId}": {
+      "schema": "Submission",
+      "description": "Collection of de-identified breakthrough client dossiers"
+    }
+  }
+}

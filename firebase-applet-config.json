@@ -5,5 +5,7 @@
   "authDomain": "gen-lang-client-0171894781.firebaseapp.com",
   "storageBucket": "gen-lang-client-0171894781.firebasestorage.app",
   "messagingSenderId": "475330285816",
-  "measurementId": ""
+  "measurementId": "",
+  "oAuthClientId": "475330285816-e86hvscr2hb8ke60fgjql4mfq5v12f61.apps.googleusercontent.com",
+  "recaptchaSiteKey": ""
 }

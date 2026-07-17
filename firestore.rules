@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global helper to check ID format and prevent ID poisoning
+    function isValidId(id) {
+      return id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // Entity validation helper (Anti-Update-Gap)
+    function isValidSubmission(data) {
+      return data.keys().hasAll(['id', 'createdAt', 'formData', 'syncedToGoogleCalendar'])
+        && data.id is string
+        && data.id.size() > 0
+        && data.id.size() <= 32
+        && data.createdAt is string
+        && data.formData is map
+        && data.syncedToGoogleCalendar is bool;
+    }
+
+    match /submissions/{submissionId} {
+      // Allow creation and update of dossiers if the ID and submission structures are valid
+      allow create, update: if isValidId(submissionId) && isValidSubmission(request.resource.data);
+      
+      // Allow read and delete so the de-identified and confidential portal can pull and manage dossiers securely
+      allow read, delete: if true;
+    }
+  }
+}

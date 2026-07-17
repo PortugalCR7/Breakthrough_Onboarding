@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { Lock, FileText, Search, Filter, Calendar, Mail, Phone, MapPin, ChevronRight, Trash2, X, AlertCircle, RefreshCw, CheckCircle2, ShieldCheck, LogOut, ArrowLeft, Sparkles, Award } from 'lucide-react';
 import { Submission } from '../types';
+import { getSubmissionsFromFirestore, deleteSubmissionFromFirestore, clearAllSubmissionsFromFirestore } from '../lib/firebase';
 
 interface PractitionerPortalProps {
   onExit: () => void;
@@ -13,36 +14,67 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
   const [authError, setAuthError] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
   
   // Filtering & Search states
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [struggleFilter, setStruggleFilter] = useState<string>('');
   const [transformationFilter, setTransformationFilter] = useState<string>('');
 
-  // Load submissions from localStorage on mount/authentication
+  // Load submissions from localStorage and Firestore on mount/authentication
   useEffect(() => {
     if (isAuthenticated) {
       loadSubmissions();
     }
   }, [isAuthenticated]);
 
-  const loadSubmissions = () => {
+  const loadSubmissions = async () => {
+    setIsLoading(true);
     try {
+      // 1. Fetch from Firestore
+      const firestoreList = await getSubmissionsFromFirestore();
+      
+      // 2. Fetch from localStorage
       const stored = localStorage.getItem('onboarding_submissions');
-      if (stored) {
-        const parsed: Submission[] = JSON.parse(stored);
-        // Sort by newest first
-        parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
-        setSubmissions(parsed);
-        if (parsed.length > 0) {
-          setSelectedSubmission(parsed[0]);
-        }
+      const localList: Submission[] = stored ? JSON.parse(stored) : [];
+      
+      // 3. Merge submissions by ID to avoid duplicates (preferring firestore)
+      const mergedMap = new Map<string, Submission>();
+      localList.forEach(item => mergedMap.set(item.id, item));
+      firestoreList.forEach(item => mergedMap.set(item.id, item));
+      
+      const mergedList = Array.from(mergedMap.values());
+      
+      // Sort by newest first
+      mergedList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      
+      setSubmissions(mergedList);
+      if (mergedList.length > 0) {
+        setSelectedSubmission(mergedList[0]);
       } else {
-        setSubmissions([]);
         setSelectedSubmission(null);
       }
+      
+      // Sync localStorage with merged state
+      localStorage.setItem('onboarding_submissions', JSON.stringify(mergedList));
     } catch (e) {
       console.error('Error loading submissions:', e);
+      // Fallback to local storage if Firestore fails
+      try {
+        const stored = localStorage.getItem('onboarding_submissions');
+        if (stored) {
+          const parsed: Submission[] = JSON.parse(stored);
+          parsed.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setSubmissions(parsed);
+          if (parsed.length > 0) {
+            setSelectedSubmission(parsed[0]);
+          }
+        }
+      } catch (err) {
+        console.error('Error in fallback load:', err);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -57,37 +89,58 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
     }
   };
 
-  const handleDeleteIndividual = (id: string) => {
+  const handleDeleteIndividual = async (id: string) => {
     const confirmed = window.confirm("Are you sure you want to permanently delete this breakthrough client dossier? This action is irreversible.");
     if (!confirmed) return;
 
+    setIsLoading(true);
     try {
-      const stored = localStorage.getItem('onboarding_submissions');
-      if (stored) {
-        const parsed: Submission[] = JSON.parse(stored);
-        const filtered = parsed.filter(item => item.id !== id);
-        localStorage.setItem('onboarding_submissions', JSON.stringify(filtered));
-        
-        setSubmissions(filtered);
-        if (selectedSubmission?.id === id) {
-          setSelectedSubmission(filtered.length > 0 ? filtered[0] : null);
-        }
+      // 1. Delete from Firestore
+      await deleteSubmissionFromFirestore(id);
+      
+      // 2. Delete from local state and localStorage
+      const filtered = submissions.filter(item => item.id !== id);
+      localStorage.setItem('onboarding_submissions', JSON.stringify(filtered));
+      setSubmissions(filtered);
+      
+      if (selectedSubmission?.id === id) {
+        setSelectedSubmission(filtered.length > 0 ? filtered[0] : null);
       }
     } catch (e) {
       console.error('Error deleting dossier:', e);
+      // Fallback
+      const filtered = submissions.filter(item => item.id !== id);
+      localStorage.setItem('onboarding_submissions', JSON.stringify(filtered));
+      setSubmissions(filtered);
+      if (selectedSubmission?.id === id) {
+        setSelectedSubmission(filtered.length > 0 ? filtered[0] : null);
+      }
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleClearAll = () => {
-    const confirmed = window.confirm("CRITICAL: You are about to wipe all breakthrough client dossiers from this local terminal. Are you absolutely sure?");
+  const handleClearAll = async () => {
+    const confirmed = window.confirm("CRITICAL: You are about to wipe all breakthrough client dossiers from both the cloud database and this local terminal. Are you absolutely sure?");
     if (!confirmed) return;
 
+    setIsLoading(true);
     try {
+      // 1. Clear from Firestore
+      await clearAllSubmissionsFromFirestore(submissions);
+      
+      // 2. Clear from local state and localStorage
       localStorage.removeItem('onboarding_submissions');
       setSubmissions([]);
       setSelectedSubmission(null);
     } catch (e) {
       console.error('Error clearing storage:', e);
+      // Fallback
+      localStorage.removeItem('onboarding_submissions');
+      setSubmissions([]);
+      setSelectedSubmission(null);
+    } finally {
+      setIsLoading(false);
     }
   };
 

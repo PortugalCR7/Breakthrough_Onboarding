@@ -7,6 +7,8 @@ import WizardForm from './components/WizardForm';
 import LongForm from './components/LongForm';
 import Scheduler from './components/Scheduler';
 import PractitionerPortal from './components/PractitionerPortal';
+import { saveSubmissionToFirestore } from './lib/firebase';
+import { downloadIcsFile } from './lib/ics';
 
 export default function App() {
   const [formState, setFormState] = useState<IntakeFormState>(INITIAL_FORM_STATE);
@@ -86,6 +88,11 @@ export default function App() {
       booking: booking,
       syncedToGoogleCalendar: synced
     };
+
+    // Asynchronously save to cloud Firestore to avoid blocking the main UI thread
+    saveSubmissionToFirestore(newSubmission).catch((err) => {
+      console.error('Failed to sync breakthrough dossier to Firestore:', err);
+    });
 
     try {
       const stored = localStorage.getItem('onboarding_submissions');
@@ -672,7 +679,7 @@ export default function App() {
                     }}>
                       <div style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                         <Calendar style={{ width: 18, height: 18, color: 'var(--gold)', flexShrink: 0, marginTop: 2 }} />
-                        <div>
+                        <div style={{ flex: 1 }}>
                           <span style={{
                             fontFamily: 'var(--font-mono)', fontSize: 9,
                             letterSpacing: '0.16em', textTransform: 'uppercase',
@@ -693,33 +700,44 @@ export default function App() {
                           }}>
                             {currentBooking.timeSlot} — 45-Minute Breakthrough Session
                           </span>
+
+                          <button
+                            id="download-ical-completion-btn"
+                            type="button"
+                            onClick={() => downloadIcsFile(currentBooking.date, currentBooking.timeSlot)}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              gap: 8,
+                              padding: '10px 18px',
+                              background: 'rgba(202,138,4,0.08)',
+                              border: '1px solid rgba(202,138,4,0.3)',
+                              borderRadius: 12,
+                              fontFamily: 'var(--font-heading)',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              letterSpacing: '0.10em',
+                              textTransform: 'uppercase',
+                              color: 'var(--gold-light)',
+                              cursor: 'pointer',
+                              marginTop: 14,
+                              transition: 'all 200ms ease'
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.background = 'rgba(202,138,4,0.16)';
+                              e.currentTarget.style.borderColor = 'rgba(202,138,4,0.5)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.background = 'rgba(202,138,4,0.08)';
+                              e.currentTarget.style.borderColor = 'rgba(202,138,4,0.3)';
+                            }}
+                          >
+                            <Calendar style={{ width: 14, height: 14 }} />
+                            Download iCal Invite (.ics)
+                          </button>
                         </div>
                       </div>
-
-                      {bookingSynced && (
-                        <div style={{
-                          padding: '10px 14px',
-                          background: 'rgba(16,185,129,0.06)',
-                          border: '1px solid rgba(16,185,129,0.2)',
-                          borderRadius: 10,
-                          display: 'flex', alignItems: 'center', gap: 8,
-                        }}>
-                          <span style={{
-                            width: 6, height: 6,
-                            borderRadius: '50%',
-                            background: '#10b981',
-                            flexShrink: 0,
-                            boxShadow: '0 0 6px rgba(16,185,129,0.6)',
-                          }} />
-                          <span style={{
-                            fontFamily: 'var(--font-mono)', fontSize: 10,
-                            letterSpacing: '0.12em', textTransform: 'uppercase',
-                            color: '#34d399',
-                          }}>
-                            Google Calendar sync complete · Secure invites dispatched
-                          </span>
-                        </div>
-                      )}
                     </div>
                   )}
 
@@ -741,22 +759,14 @@ export default function App() {
                   </div>
 
                   {/* Actions */}
-                  <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="flex justify-center">
                     <button
                       id="submit-new-dossier-btn"
                       onClick={handleResetSession}
                       className="btn-gold"
-                      style={{ flex: 1 }}
+                      style={{ padding: '12px 36px' }}
                     >
-                      Submit New Ledger
-                    </button>
-                    <button
-                      id="revisit-portal-btn"
-                      onClick={() => setIsPortalMode(true)}
-                      className="btn-ghost"
-                      style={{ flex: 1 }}
-                    >
-                      Facilitator Portal
+                      Submit New Form
                     </button>
                   </div>
                 </div>
