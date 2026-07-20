@@ -21,26 +21,18 @@ export default function App() {
   const [encryptionProgress, setEncryptionProgress] = useState<number>(0);
   const [welcomeAccepted, setWelcomeAccepted] = useState<boolean>(false);
 
-  // Load form state caching from localStorage on mount
+  // Clear any existing draft state from localStorage on mount to ensure fresh sessions
   useEffect(() => {
     try {
-      const cached = localStorage.getItem('draft_onboarding_form');
-      if (cached) {
-        setFormState(JSON.parse(cached));
-      }
+      localStorage.removeItem('draft_onboarding_form');
     } catch (e) {
-      console.error('Error loading draft caching:', e);
+      console.error('Error clearing draft caching:', e);
     }
   }, []);
 
-  // Sync draft form state caching to localStorage on change
+  // Form changes only update component state in-memory to preserve privacy and confidentiality
   const handleFormChange = (newState: IntakeFormState) => {
     setFormState(newState);
-    try {
-      localStorage.setItem('draft_onboarding_form', JSON.stringify(newState));
-    } catch (e) {
-      console.error('Error saving draft caching:', e);
-    }
   };
 
   // Form submission: triggers loading phase with cryptographic signatures
@@ -350,14 +342,24 @@ export default function App() {
                       }}
                     >
                       <Lock style={{ width: 10, height: 10 }} />
-                      End-to-end encrypted · De-identified · Confidential
+                      End-to-end encrypted · Confidential
                     </motion.p>
                   </div>
                 </div>
               ) : (
                 <>
-                  {/* Layout Toggle */}
-                  <div style={{ display: 'flex', justifyContent: 'center' }}>
+                  {/* Layout Toggle & Clear Form */}
+                  <div style={{
+                    display: 'flex',
+                    flexDirection: 'row',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: 12,
+                    width: '100%',
+                  }}>
+                    <div className="hidden md:block" style={{ width: 140 }} />
+
                     <div className="glass-card" style={{
                       display: 'inline-flex',
                       alignItems: 'center',
@@ -403,6 +405,30 @@ export default function App() {
                         </button>
                       ))}
                     </div>
+
+                    <button
+                      id="reset-form-top-btn"
+                      onClick={() => {
+                        if (window.confirm("Are you sure you want to completely clear this form and start fresh? All typed responses will be permanently cleared.")) {
+                          handleResetSession();
+                        }
+                      }}
+                      className="btn-ghost"
+                      style={{
+                        padding: '8px 16px',
+                        fontSize: 9,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: 6,
+                        fontFamily: 'var(--font-heading)',
+                        fontWeight: 600,
+                        letterSpacing: '0.14em',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      <RefreshCw style={{ width: 11, height: 11 }} />
+                      Clear Form
+                    </button>
                   </div>
 
                   {/* Form Card */}
@@ -642,7 +668,7 @@ export default function App() {
                       color: '#F5F3EF',
                       lineHeight: 1.2,
                     }}>
-                      Breakthrough Ledger Compiled<br />
+                      BREAKTHROUGH Form Submitted<br />
                       <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>& Session Reserved</em>
                     </h2>
 
@@ -795,7 +821,7 @@ export default function App() {
           letterSpacing: '0.18em', textTransform: 'uppercase',
           color: 'var(--text-muted)',
         }}>
-          © 2026 The Breakthrough Experience · Advanced De-Identified Intellectual Ledger · All Rights Reserved
+          © 2026 The Breakthrough Experience · All Rights Reserved
         </span>
       </footer>
     </div>
