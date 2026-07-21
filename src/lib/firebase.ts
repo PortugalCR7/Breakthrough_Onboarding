@@ -6,7 +6,7 @@ import { Submission } from '../types';
 
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app, 'ai-studio-breakthroughexpe-9e8c069f-55e9-413a-9285-78032331b413');
+export const db = getFirestore(app);
 
 // Test Firestore connection on boot (Critical Constraint)
 async function testConnection() {
@@ -81,18 +81,67 @@ export const logout = async () => {
   cachedAccessToken = null;
 };
 
+// Firestore Error Handling Interface and Helper (Required by Firebase Integration Skill)
+export enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  }
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo: auth.currentUser?.providerData?.map(provider => ({
+        providerId: provider.providerId,
+        email: provider.email,
+      })) || []
+    },
+    operationType,
+    path
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
+
 // Firestore helper functions for Submission management
 export const saveSubmissionToFirestore = async (submission: Submission): Promise<void> => {
+  const path = `submissions/${submission.id}`;
   try {
     const docRef = doc(db, 'submissions', submission.id);
     await setDoc(docRef, submission);
   } catch (error) {
-    console.error('Error saving submission to Firestore:', error);
-    throw error;
+    handleFirestoreError(error, OperationType.WRITE, path);
   }
 };
 
 export const getSubmissionsFromFirestore = async (): Promise<Submission[]> => {
+  const path = 'submissions';
   try {
     const submissionsCol = collection(db, 'submissions');
     const snapshot = await getDocs(submissionsCol);
@@ -102,18 +151,17 @@ export const getSubmissionsFromFirestore = async (): Promise<Submission[]> => {
     });
     return list;
   } catch (error) {
-    console.error('Error getting submissions from Firestore:', error);
-    throw error;
+    handleFirestoreError(error, OperationType.LIST, path);
   }
 };
 
 export const deleteSubmissionFromFirestore = async (id: string): Promise<void> => {
+  const path = `submissions/${id}`;
   try {
     const docRef = doc(db, 'submissions', id);
     await deleteDoc(docRef);
   } catch (error) {
-    console.error('Error deleting submission from Firestore:', error);
-    throw error;
+    handleFirestoreError(error, OperationType.DELETE, path);
   }
 };
 
@@ -123,8 +171,7 @@ export const clearAllSubmissionsFromFirestore = async (submissionsList: Submissi
       await deleteDoc(doc(db, 'submissions', sub.id));
     }
   } catch (error) {
-    console.error('Error clearing all submissions from Firestore:', error);
-    throw error;
+    handleFirestoreError(error, OperationType.DELETE, 'submissions');
   }
 };
 

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Lock, FileText, Search, Filter, Calendar, Mail, Phone, MapPin, ChevronRight, Trash2, X, AlertCircle, RefreshCw, CheckCircle2, ShieldCheck, LogOut, ArrowLeft, Sparkles, Award } from 'lucide-react';
+import { Lock, FileText, Search, Filter, Calendar, Mail, Phone, MapPin, ChevronRight, Trash2, X, AlertCircle, RefreshCw, CheckCircle2, ShieldCheck, LogOut, ArrowLeft, Sparkles, Award, Download, Printer, Cloud } from 'lucide-react';
 import { Submission } from '../types';
-import { getSubmissionsFromFirestore, deleteSubmissionFromFirestore, clearAllSubmissionsFromFirestore } from '../lib/firebase';
+import { getSubmissionsFromFirestore, deleteSubmissionFromFirestore, clearAllSubmissionsFromFirestore, googleSignIn, getAccessToken } from '../lib/firebase';
 
 interface PractitionerPortalProps {
   onExit: () => void;
@@ -20,6 +20,256 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [struggleFilter, setStruggleFilter] = useState<string>('');
   const [transformationFilter, setTransformationFilter] = useState<string>('');
+
+  // HTML dossier generator for printing, Word exporting, or Google Doc saving
+  const generateDossierHTML = (sub: Submission) => {
+    const profile = sub.formData.personalProfile;
+    const booking = sub.booking;
+    const struggles = sub.formData.challengesAndValues?.primaryStruggle || [];
+    const priorExp = sub.formData.challengesAndValues?.priorExperience || [];
+    const impediments = sub.formData.challengesAndValues?.currentImpediments || [];
+    const areas = sub.formData.goals?.transformationAreas || [];
+    const vision = sub.formData.goals?.breakthroughVision || "Client declined to provide a written narrative.";
+
+    return `
+      <div style="font-family: 'Georgia', serif; color: #1c1917; line-height: 1.6; padding: 40px; max-width: 800px; margin: 0 auto; background-color: #ffffff;">
+        <div style="text-align: center; margin-bottom: 30px;">
+          <h1 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 24px; border-bottom: 2px solid #ca8a04; padding-bottom: 12px; margin-top: 0; text-transform: uppercase; letter-spacing: 2px; color: #ca8a04; display: inline-block; width: 100%;">
+            The Breakthrough Experience
+          </h1>
+          <div style="font-family: monospace; font-size: 11px; color: #78716c; margin-top: 10px; line-height: 1.5;">
+            CONFIDENTIAL CLIENT DOSSIER &bull; SECURITY ID: ${sub.id}<br>
+            GENERATED RECORD DATE: ${new Date(sub.createdAt).toLocaleString()}
+          </div>
+        </div>
+        
+        <h2 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #e7e5e4; padding-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; color: #44403c; font-weight: bold;">
+          I. Biographical Core Ledger
+        </h2>
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 25px;">
+          <tr>
+            <td style="width: 50%; padding: 8px 12px; border: 1px solid #e7e5e4; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 4px; font-weight: bold;">Client Full Name</span>
+              <strong style="font-size: 14px; color: #1c1917;">${profile.firstName} ${profile.lastName}</strong>
+            </td>
+            <td style="width: 50%; padding: 8px 12px; border: 1px solid #e7e5e4; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 4px; font-weight: bold;">Confidential Email</span>
+              <strong style="font-size: 14px; color: #1c1917;">${profile.email}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 12px; border: 1px solid #e7e5e4; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 4px; font-weight: bold;">Secure Mobile Line</span>
+              <strong style="font-size: 14px; color: #1c1917;">${profile.phone}</strong>
+            </td>
+            <td style="padding: 8px 12px; border: 1px solid #e7e5e4; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 4px; font-weight: bold;">Physical Base Location</span>
+              <strong style="font-size: 14px; color: #1c1917;">${profile.city}, ${profile.state}</strong>
+            </td>
+          </tr>
+          <tr>
+            <td colspan="2" style="padding: 8px 12px; border: 1px solid #e7e5e4; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 4px; font-weight: bold;">Preferred Communication Channel</span>
+              <strong style="font-size: 14px; color: #1c1917;">${profile.preferredCommunication || 'Not Specified'}</strong>
+            </td>
+          </tr>
+        </table>
+
+        <h2 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #e7e5e4; padding-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; color: #44403c; font-weight: bold;">
+          II. Life Bottlenecks & Friction Indicators
+        </h2>
+        <div style="margin-bottom: 20px;">
+          <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 8px; font-weight: bold;">Primary Overriding Struggles</span>
+          <div>
+            ${struggles.map(s => `<span style="display: inline-block; background: #fafaf9; border: 1px solid #d6d3d1; color: #44403c; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 8px; margin-bottom: 8px; font-family: 'Helvetica Neue', Arial, sans-serif;">${s}</span>`).join('') || '<em style="color:#78716c; font-size: 13px;">None selected</em>'}
+          </div>
+        </div>
+        
+        <table style="width: 100%; border-collapse: collapse; margin-top: 15px; margin-bottom: 25px;">
+          <tr>
+            <td style="width: 50%; padding-right: 15px; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 8px; font-weight: bold;">Previous Inner Frameworks Studied</span>
+              ${priorExp.map(exp => `<div style="margin-bottom: 6px; font-size: 13px; color: #292524;">&bull; ${exp}</div>`).join('') || '<em style="color:#78716c; font-size: 13px;">None logged</em>'}
+            </td>
+            <td style="width: 50%; vertical-align: top;">
+              <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 8px; font-weight: bold;">Documented Behavioral & Mental Impediments</span>
+              ${impediments.map(imp => `<div style="margin-bottom: 6px; font-size: 13px; color: #292524;">&bull; ${imp}</div>`).join('') || '<em style="color:#78716c; font-size: 13px;">None logged</em>'}
+            </td>
+          </tr>
+        </table>
+
+        <h2 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #e7e5e4; padding-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; color: #44403c; font-weight: bold;">
+          III. Life Transformation Vector Mapping
+        </h2>
+        <div style="margin-bottom: 20px;">
+          <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 8px; font-weight: bold;">Core Selected 7 Areas of Life Targets</span>
+          <div>
+            ${areas.map(area => `<span style="display: inline-block; background: #ca8a04; color: white; padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: bold; margin-right: 8px; margin-bottom: 8px; font-family: 'Helvetica Neue', Arial, sans-serif; text-transform: uppercase; letter-spacing: 1px;">${area}</span>`).join('') || '<em style="color:#78716c; font-size: 13px;">None selected</em>'}
+          </div>
+        </div>
+        
+        <div style="margin-top: 15px; margin-bottom: 25px;">
+          <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #78716c; display: block; margin-bottom: 8px; font-weight: bold;">Breakthrough Vision Transcript</span>
+          <div style="background: #fafaf9; border: 1px solid #e7e5e4; border-radius: 8px; padding: 18px; font-style: italic; white-space: pre-wrap; font-size: 13px; color: #292524; border-left: 4px solid #ca8a04;">${vision}</div>
+        </div>
+
+        <h2 style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; font-size: 15px; margin-top: 30px; margin-bottom: 15px; border-bottom: 1px solid #e7e5e4; padding-bottom: 6px; text-transform: uppercase; letter-spacing: 1px; color: #44403c; font-weight: bold;">
+          IV. Consultation Alignment
+        </h2>
+        ${booking ? `
+          <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 18px;">
+            <span style="font-family: monospace; font-size: 9px; text-transform: uppercase; color: #166534; display: block; margin-bottom: 4px; font-weight: bold;">Scheduled Session Time slot</span>
+            <strong style="color: #14532d; font-size: 16px;">${booking.date} at ${booking.timeSlot}</strong>
+          </div>
+        ` : `
+          <div style="background: #fafaf9; border: 1px solid #e7e5e4; border-radius: 8px; padding: 18px; color: #78716c; font-size: 13px;">
+            <strong>Appointment Pending</strong><br>
+            Form submission captured; user has not reserved calendar slot yet.
+          </div>
+        `}
+      </div>
+    `;
+  };
+
+  // Download Markdown (.md)
+  const downloadMarkdown = (sub: Submission) => {
+    const profile = sub.formData.personalProfile;
+    const booking = sub.booking;
+    
+    let md = `# THE BREAKTHROUGH EXPERIENCE: CONFIDENTIAL CLIENT DOSSIER\n`;
+    md += `===================================================================\n\n`;
+    md += `**Dossier Security ID:** ${sub.id}\n`;
+    md += `**Generated Record Date:** ${new Date(sub.createdAt).toLocaleString()}\n\n`;
+    
+    md += `## I. BIOGRAPHICAL CORE LEDGER\n`;
+    md += `--------------------------------\n`;
+    md += `- **Full Name:** ${profile.firstName} ${profile.lastName}\n`;
+    md += `- **Confidential Email:** ${profile.email}\n`;
+    md += `- **Secure Mobile Line:** ${profile.phone}\n`;
+    md += `- **Physical Base Location:** ${profile.city}, ${profile.state}\n`;
+    md += `- **Preferred Communication Channel:** ${profile.preferredCommunication || "Not Specified"}\n\n`;
+    
+    md += `## II. LIFE BOTTLENECKS & FRICTION INDICATORS\n`;
+    md += `----------------------------------------------\n`;
+    md += `### Primary Overriding Struggles:\n`;
+    const struggles = sub.formData.challengesAndValues?.primaryStruggle || [];
+    if (struggles.length === 0) {
+      md += `*None selected*\n`;
+    } else {
+      struggles.forEach((s, idx) => {
+        md += `${idx + 1}. ${s}\n`;
+      });
+    }
+    md += `\n`;
+    
+    md += `### Previous Inner Frameworks Studied:\n`;
+    const priorExp = sub.formData.challengesAndValues?.priorExperience || [];
+    if (priorExp.length === 0) {
+      md += `*None logged*\n`;
+    } else {
+      priorExp.forEach(e => {
+        md += `- ${e}\n`;
+      });
+    }
+    md += `\n`;
+    
+    md += `### Documented Behavioral & Mental Impediments:\n`;
+    const impediments = sub.formData.challengesAndValues?.currentImpediments || [];
+    if (impediments.length === 0) {
+      md += `*None logged*\n`;
+    } else {
+      impediments.forEach(imp => {
+        md += `- ${imp}\n`;
+      });
+    }
+    md += `\n\n`;
+    
+    md += `## III. LIFE TRANSFORMATION VECTOR MAPPING\n`;
+    md += `-------------------------------------------\n`;
+    md += `### Core Selected 7 Areas of Life Targets:\n`;
+    const areas = sub.formData.goals?.transformationAreas || [];
+    if (areas.length === 0) {
+      md += `*None selected*\n`;
+    } else {
+      areas.forEach(area => {
+        md += `- ${area}\n`;
+      });
+    }
+    md += `\n`;
+    
+    md += `### Breakthrough Vision Transcript:\n`;
+    md += `${sub.formData.goals?.breakthroughVision || "Client declined to provide a written narrative."}\n\n`;
+    
+    md += `## IV. CONSULTATION ALIGNMENT\n`;
+    md += `-----------------------------\n`;
+    if (booking) {
+      md += `- **Session Status:** Reserved\n`;
+      md += `- **Scheduled Session:** ${booking.date} at ${booking.timeSlot}\n`;
+    } else {
+      md += `- **Session Status:** Appointment Pending\n`;
+      md += `Form submission captured; user has not reserved calendar slot yet.\n`;
+    }
+    
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Dossier_${profile.lastName}_${profile.firstName}.md`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Download Microsoft Word (.doc)
+  const downloadWordDoc = (sub: Submission) => {
+    const profile = sub.formData.personalProfile;
+    const htmlContent = generateDossierHTML(sub);
+    
+    const documentTemplate = `
+      <html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
+      <head>
+        <title>Dossier_${profile.lastName}_${profile.firstName}</title>
+        <!--[if gte mso 9]>
+        <xml>
+          <w:WordDocument>
+            <w:View>Print</w:View>
+            <w:Zoom>100</w:Zoom>
+          </w:WordDocument>
+        </xml>
+        <![endif]-->
+      </head>
+      <body style="background-color: white;">
+        ${htmlContent}
+      </body>
+      </html>
+    `;
+    
+    const blob = new Blob([documentTemplate], { type: 'application/msword;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `Dossier_${profile.lastName}_${profile.firstName}.doc`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
+  // Print Dossier / Save as PDF
+  const printDossier = (sub: Submission) => {
+    const htmlContent = generateDossierHTML(sub);
+    const printWindow = window.open('', '_blank', 'width=900,height=800');
+    if (!printWindow) {
+      alert("Please allow pop-up windows to print or save the dossier as PDF.");
+      return;
+    }
+    
+    printWindow.document.open();
+    printWindow.document.write(htmlContent);
+    printWindow.document.write('<script>window.onload = function() { window.print(); window.close(); }</script>');
+    printWindow.document.close();
+  };
 
   // Load submissions from localStorage and Firestore on mount/authentication
   useEffect(() => {
@@ -86,6 +336,27 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
       setPasscode('');
     } else {
       setAuthError('Unauthorized breakthrough secure key. Access denied.');
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    setAuthError(null);
+    setIsLoading(true);
+    try {
+      const result = await googleSignIn();
+      if (result) {
+        const email = result.user.email?.toLowerCase();
+        if (email === 'frankmondeose@gmail.com' || email === 'davidmiranda512@gmail.com') {
+          setIsAuthenticated(true);
+        } else {
+          setAuthError(`Access Denied: ${result.user.email} is not authorized to access the Facilitator Terminal.`);
+        }
+      }
+    } catch (err: any) {
+      console.error("Google sign in error:", err);
+      setAuthError(`Google authentication failed: ${err.message || String(err)}`);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -205,6 +476,32 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
               Authorize Secure Ledger
             </button>
           </form>
+
+          <div className="relative flex py-1 items-center">
+            <div className="flex-grow border-t border-stone-800"></div>
+            <span className="flex-shrink mx-4 text-[10px] font-mono uppercase tracking-wider text-stone-500">or</span>
+            <div className="flex-grow border-t border-stone-800"></div>
+          </div>
+
+          <div className="space-y-2">
+            <button
+              id="practitioner-google-auth-btn"
+              type="button"
+              onClick={handleGoogleLogin}
+              disabled={isLoading}
+              className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-800 font-display text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md cursor-pointer font-semibold flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Cloud className="w-3.5 h-3.5 text-yellow-500" />
+              )}
+              <span>Sign In with Google</span>
+            </button>
+            <p className="text-[10px] text-center text-stone-500 font-mono">
+              Authorized Facilitator Email: <span className="text-stone-400">frankmondeose@gmail.com</span>
+            </p>
+          </div>
 
           <div className="pt-4 border-t border-stone-850 text-center">
             <button
@@ -340,7 +637,7 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
                 const formattedDate = dateObj.toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
                 
                 return (
-                  <button
+                  <div
                     key={sub.id}
                     id={`portal-item-${sub.id}`}
                     onClick={() => setSelectedSubmission(sub)}
@@ -380,7 +677,7 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
-                  </button>
+                  </div>
                 );
               })
             )}
@@ -419,6 +716,50 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
                       <span className="text-xs text-stone-300 block mt-1 leading-relaxed">Form submission captured; user has not reserved calendar slot.</span>
                     </div>
                   )}
+                </div>
+              </div>
+
+              {/* Export & Download Ledger Tools */}
+              <div id="portal-export-panel" className="bg-stone-900/40 p-4 rounded-2xl border border-stone-850 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" />
+                  <span className="text-xs font-mono uppercase tracking-wider text-stone-300 font-bold">Dossier Export Ledger Control</span>
+                </div>
+                
+                <div className="flex flex-wrap items-center gap-2 w-full md:w-auto justify-end">
+                  {/* Download MD */}
+                  <button
+                    id="export-btn-md"
+                    onClick={() => downloadMarkdown(selectedSubmission)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300 transition-colors"
+                    title="Download as Markdown"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Markdown (.md)</span>
+                  </button>
+
+                  {/* Download DOC */}
+                  <button
+                    id="export-btn-doc"
+                    onClick={() => downloadWordDoc(selectedSubmission)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300 transition-colors"
+                    title="Download as MS Word Document"
+                  >
+                    <Download className="w-3.5 h-3.5" />
+                    <span>Word (.doc)</span>
+                  </button>
+
+                  {/* Print / Save as PDF */}
+                  <button
+                    id="export-btn-pdf"
+                    onClick={() => printDossier(selectedSubmission)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 bg-stone-950 hover:bg-stone-800 border border-stone-800 rounded-lg text-xs font-mono text-stone-300 transition-colors"
+                    title="Print dossier or save as PDF"
+                  >
+                    <Printer className="w-3.5 h-3.5" />
+                    <span>Print / PDF</span>
+                  </button>
+
                 </div>
               </div>
 

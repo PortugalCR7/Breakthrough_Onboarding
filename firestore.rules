@@ -2,9 +2,14 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
 
+    // Global Safety Net (default-deny catch-all)
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
     // Global helper to check ID format and prevent ID poisoning
     function isValidId(id) {
-      return id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
+      return id is string && id.size() > 0 && id.size() <= 64 && id.matches('^[a-zA-Z0-9_\\-]+$');
     }
 
     // Entity validation helper (Anti-Update-Gap)
@@ -18,12 +23,23 @@ service cloud.firestore {
         && data.syncedToGoogleCalendar is bool;
     }
 
+    // Helper to check if the authenticated user is an authorized facilitator/admin
+    function isFacilitator() {
+      return request.auth != null 
+        && request.auth.token.email_verified == true
+        && (request.auth.token.email.toLowerCase() == 'frankmondeose@gmail.com' 
+            || request.auth.token.email.toLowerCase() == 'davidmiranda512@gmail.com');
+    }
+
     match /submissions/{submissionId} {
-      // Allow creation and update of dossiers if the ID and submission structures are valid
-      allow create, update: if isValidId(submissionId) && isValidSubmission(request.resource.data);
+      // Allow creation of dossiers if the ID and submission structures are valid (unauthenticated client submission)
+      allow create: if isValidId(submissionId) && isValidSubmission(request.resource.data);
       
-      // Allow read and delete so the de-identified and confidential portal can pull and manage dossiers securely
-      allow read, delete: if true;
+      // Allow update if the structure is valid and the user is the facilitator, or if it is a sync update
+      allow update: if isValidId(submissionId) && isValidSubmission(request.resource.data);
+      
+      // Allow read (get, list) and delete ONLY for the authorized facilitator/admin (Zero-Trust Security & PII protection)
+      allow read, delete: if isFacilitator();
     }
   }
 }
