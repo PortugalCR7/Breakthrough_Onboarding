@@ -136,6 +136,22 @@ export default function App() {
       console.error('Failed to sync breakthrough dossier to Firestore:', err);
     });
 
+    // Fire-and-forget notification to Frank (calendar event + email).
+    // Never allowed to block or break the booking flow if it fails.
+    try {
+      fetch('REPLACE_WITH_SCRIPT_WEB_APP_URL', {
+        method: 'POST',
+        body: JSON.stringify({
+          secret: 'nis4VhzTsVVCxHfyE_fQL7dvtIIrhSgja3F9GwH6AyU',
+          submission: newSubmission
+        })
+      }).catch((err) => {
+        console.error('Failed to notify facilitator:', err);
+      });
+    } catch (err) {
+      console.error('Failed to trigger facilitator notification:', err);
+    }
+
     try {
       const stored = localStorage.getItem('onboarding_submissions');
       const parsed: Submission[] = stored ? JSON.parse(stored) : [];
