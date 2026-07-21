@@ -10,7 +10,6 @@ interface PractitionerPortalProps {
 
 export default function PractitionerPortal({ onExit }: PractitionerPortalProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [passcode, setPasscode] = useState<string>('');
   const [authError, setAuthError] = useState<string | null>(null);
   const [submissions, setSubmissions] = useState<Submission[]>([]);
   const [selectedSubmission, setSelectedSubmission] = useState<Submission | null>(null);
@@ -328,17 +327,6 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
     }
   };
 
-  const handleLogin = (e: React.FormEvent) => {
-    e.preventDefault();
-    setAuthError(null);
-    if (passcode === 'admin123' || passcode === 'breakthrough!') {
-      setIsAuthenticated(true);
-      setPasscode('');
-    } else {
-      setAuthError('Unauthorized breakthrough secure key. Access denied.');
-    }
-  };
-
   const handleGoogleLogin = async () => {
     setAuthError(null);
     setIsLoading(true);
@@ -444,23 +432,10 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
               <Lock className="w-5 h-5 text-stone-300" />
             </div>
             <h2 className="text-xl font-display font-bold text-white tracking-widest uppercase">Facilitator Terminal</h2>
-            <p className="text-xs text-stone-400 font-sans font-light">Enter secure key to access sensitive client breakthrough profiles.</p>
+            <p className="text-xs text-stone-400 font-sans font-light">Sign in to access sensitive client breakthrough profiles.</p>
           </div>
 
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <label htmlFor="passcode-input" className="block text-xs font-mono uppercase tracking-wider text-stone-300 mb-2 font-semibold">Security Passcode</label>
-              <input
-                id="passcode-input"
-                type="password"
-                value={passcode}
-                onChange={(e) => setPasscode(e.target.value)}
-                placeholder="Enter passcode"
-                className="w-full px-4 py-3 bg-stone-950 border border-stone-800 rounded-xl text-white focus:outline-none focus:ring-2 focus:ring-stone-700 focus:border-stone-600 transition-all text-center text-sm font-mono placeholder-stone-500"
-                autoFocus
-              />
-            </div>
-
+          <div className="space-y-4">
             {authError && (
               <div id="auth-error-banner" className="p-3 bg-red-950/20 border border-red-900/40 rounded-xl text-xs text-red-300 flex items-center gap-2 font-mono">
                 <AlertCircle className="w-4 h-4 shrink-0 text-red-400" />
@@ -469,37 +444,22 @@ export default function PractitionerPortal({ onExit }: PractitionerPortalProps) 
             )}
 
             <button
-              id="practitioner-auth-btn"
-              type="submit"
-              className="w-full py-3 bg-stone-100 hover:bg-white text-stone-950 font-display text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md cursor-pointer font-semibold"
-            >
-              Authorize Secure Ledger
-            </button>
-          </form>
-
-          <div className="relative flex py-1 items-center">
-            <div className="flex-grow border-t border-stone-800"></div>
-            <span className="flex-shrink mx-4 text-[10px] font-mono uppercase tracking-wider text-stone-500">or</span>
-            <div className="flex-grow border-t border-stone-800"></div>
-          </div>
-
-          <div className="space-y-2">
-            <button
               id="practitioner-google-auth-btn"
               type="button"
               onClick={handleGoogleLogin}
               disabled={isLoading}
-              className="w-full py-3 bg-stone-900 hover:bg-stone-800 text-stone-200 border border-stone-800 font-display text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md cursor-pointer font-semibold flex items-center justify-center gap-2"
+              className="w-full py-3 bg-stone-100 hover:bg-white text-stone-950 font-display text-xs font-bold uppercase tracking-widest rounded-full transition-all shadow-md cursor-pointer font-semibold flex items-center justify-center gap-2"
             >
               {isLoading ? (
                 <RefreshCw className="w-3.5 h-3.5 animate-spin" />
               ) : (
-                <Cloud className="w-3.5 h-3.5 text-yellow-500" />
+                <Cloud className="w-3.5 h-3.5 text-stone-950" />
               )}
               <span>Sign In with Google</span>
             </button>
             <p className="text-[10px] text-center text-stone-500 font-mono">
-              Authorized Facilitator Email: <span className="text-stone-400">frankmondeose@gmail.com</span>
+              Authorized Facilitator Emails: <br />
+              <span className="text-stone-400">frankmondeose@gmail.com</span> · <span className="text-stone-400">davidmiranda512@gmail.com</span>
             </p>
           </div>
 

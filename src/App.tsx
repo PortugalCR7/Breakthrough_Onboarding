@@ -10,6 +10,56 @@ import PractitionerPortal from './components/PractitionerPortal';
 import { saveSubmissionToFirestore } from './lib/firebase';
 import { downloadIcsFile } from './lib/ics';
 
+const CrownIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => {
+  return (
+    <svg 
+      viewBox="0 0 512 512" 
+      className={className} 
+      style={{ width: '100%', height: '100%', ...style }}
+      fill="none" 
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      {/* Outer circular gold border */}
+      <circle cx="256" cy="256" r="190" stroke="currentColor" strokeWidth="12" />
+      
+      {/* Crown base horizontal bands */}
+      <path d="M138 350 H374" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
+      <path d="M138 362 H374" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
+      <path d="M145 374 H367" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
+      
+      {/* Crown peaks and curls */}
+      {/* Base curve of the crown cup */}
+      <path d="M146 338 Q256 325 366 338" stroke="currentColor" strokeWidth="8" fill="none" />
+      
+      {/* Left peak */}
+      <path d="M146 338 L98 200 L180 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
+      <circle cx="180" cy="270" r="12" stroke="currentColor" strokeWidth="8" fill="none" />
+      
+      {/* Right peak */}
+      <path d="M366 338 L414 200 L332 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
+      <circle cx="332" cy="270" r="12" stroke="currentColor" strokeWidth="8" fill="none" />
+      
+      {/* Central tall peak */}
+      <path d="M180 270 L256 120 L332 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
+      {/* Central peak vertical line anchor */}
+      <path d="M256 120 V330" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
+      
+      {/* Starburst Lens flare at the top of the middle peak */}
+      <g stroke="currentColor" strokeWidth="3">
+        {/* Vertical beam */}
+        <path d="M256 40 V150" strokeWidth="4" />
+        {/* Horizontal beam */}
+        <path d="M210 95 H302" strokeWidth="2" />
+        {/* Diagonal beams */}
+        <path d="M224 63 L288 127" strokeWidth="1.5" />
+        <path d="M288 63 L224 127" strokeWidth="1.5" />
+      </g>
+      {/* Bright center diamond */}
+      <path d="M256 80 L262 95 L256 110 L250 95 Z" fill="currentColor" />
+    </svg>
+  );
+};
+
 export default function App() {
   const [formState, setFormState] = useState<IntakeFormState>(INITIAL_FORM_STATE);
   const [layoutMode, setLayoutMode] = useState<'wizard' | 'single'>('wizard');
@@ -159,7 +209,7 @@ export default function App() {
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               boxShadow: '0 0 14px rgba(202,138,4,0.12)',
             }}>
-              <Award style={{ width: 18, height: 18, color: 'var(--gold)' }} />
+              <CrownIcon style={{ width: 22, height: 22, color: 'var(--gold)' }} />
             </div>
             <div>
               <span style={{
@@ -246,7 +296,7 @@ export default function App() {
                         boxShadow: '0 0 32px rgba(202,138,4,0.15)',
                       }}
                     >
-                      <Sparkles style={{ width: 28, height: 28, color: 'var(--gold)' }} />
+                      <CrownIcon style={{ width: 36, height: 36, color: 'var(--gold)' }} />
                     </motion.div>
 
                     <motion.div
@@ -668,7 +718,8 @@ export default function App() {
                       color: '#F5F3EF',
                       lineHeight: 1.2,
                     }}>
-                      BREAKTHROUGH Form Submitted<br />
+                      BREAKTHROUGH<br />
+                      Form Submitted<br />
                       <em style={{ color: 'var(--gold-light)', fontStyle: 'italic' }}>& Session Reserved</em>
                     </h2>
 
