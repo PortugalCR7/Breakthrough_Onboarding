@@ -12,38 +12,38 @@ import { downloadIcsFile } from './lib/ics';
 
 const CrownIcon = ({ className, style }: { className?: string, style?: React.CSSProperties }) => {
   return (
-    <svg 
-      viewBox="0 0 512 512" 
-      className={className} 
+    <svg
+      viewBox="0 0 512 512"
+      className={className}
       style={{ width: '100%', height: '100%', ...style }}
-      fill="none" 
+      fill="none"
       xmlns="http://www.w3.org/2000/svg"
     >
       {/* Outer circular gold border */}
       <circle cx="256" cy="256" r="190" stroke="currentColor" strokeWidth="12" />
-      
+
       {/* Crown base horizontal bands */}
       <path d="M138 350 H374" stroke="currentColor" strokeWidth="8" strokeLinecap="round" />
       <path d="M138 362 H374" stroke="currentColor" strokeWidth="5" strokeLinecap="round" />
       <path d="M145 374 H367" stroke="currentColor" strokeWidth="3" strokeLinecap="round" />
-      
+
       {/* Crown peaks and curls */}
       {/* Base curve of the crown cup */}
       <path d="M146 338 Q256 325 366 338" stroke="currentColor" strokeWidth="8" fill="none" />
-      
+
       {/* Left peak */}
       <path d="M146 338 L98 200 L180 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
       <circle cx="180" cy="270" r="12" stroke="currentColor" strokeWidth="8" fill="none" />
-      
+
       {/* Right peak */}
       <path d="M366 338 L414 200 L332 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
       <circle cx="332" cy="270" r="12" stroke="currentColor" strokeWidth="8" fill="none" />
-      
+
       {/* Central tall peak */}
       <path d="M180 270 L256 120 L332 270" stroke="currentColor" strokeWidth="8" strokeLinejoin="round" fill="none" />
       {/* Central peak vertical line anchor */}
       <path d="M256 120 V330" stroke="currentColor" strokeWidth="6" strokeLinecap="round" />
-      
+
       {/* Starburst Lens flare at the top of the middle peak */}
       <g stroke="currentColor" strokeWidth="3">
         {/* Vertical beam */}
@@ -139,7 +139,7 @@ export default function App() {
     // Fire-and-forget notification to Frank (calendar event + email).
     // Never allowed to block or break the booking flow if it fails.
     try {
-      fetch('REPLACE_WITH_SCRIPT_WEB_APP_URL', {
+      fetch('https://script.google.com/macros/s/AKfycbyqtNdKa6gitrs-x4XHC5psioXsLAT8Am0tqIUlraepjBIMjWWmXNSrmaabyrEUJo0Jcg/exec', {
         method: 'POST',
         body: JSON.stringify({
           secret: 'nis4VhzTsVVCxHfyE_fQL7dvtIIrhSgja3F9GwH6AyU',
